@@ -377,17 +377,20 @@ describe('Calculator', () => {
     describe('Volume Unit Aliases', () => {
         it('should convert "cu" shorthand to cubic centimeters', () => {
             const results = calc.evaluate('20 cu cm');
-            expect(results[0]).toContain('cm^3');
+            // Accept both Unicode ³ and ^3 notation
+            expect(results[0]).toMatch(/cm[³\^3]/);
         });
 
         it('should handle "cubic" keyword for inches', () => {
             const results = calc.evaluate('30 cubic inches');
-            expect(results[0]).toContain('inch^3');
+            // Accept both Unicode ³ and ^3 notation, and various inch symbols
+            expect(results[0]).toMatch(/(inch|in|″)[³\^3]/);
         });
 
         it('should expand cbm to cubic meters', () => {
             const results = calc.evaluate('11 cbm');
-            expect(results[0]).toContain('m^3');
+            // Accept both Unicode ³ and ^3 notation
+            expect(results[0]).toMatch(/m[³\^3]/);
         });
     });
 

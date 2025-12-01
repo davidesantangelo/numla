@@ -64,7 +64,7 @@ function renderSpotlight() {
   const query = ui.elements.spotlightInput.value.toLowerCase();
   const notes = store.getNotes();
   
-  // Filter out empty notes (notes without content or with only whitespace)
+  // Filter out empty notes (Untitled) from search
   const nonEmptyNotes = notes.filter(n => n.content && n.content.trim() !== '');
   
   if (query) {
@@ -119,9 +119,7 @@ function saveTabs() {
 }
 
 function renderTabs() {
-  const notes = store.getNotes();
-  const tabs = openTabs.map(id => notes.find(n => n.id === id)).filter(Boolean);
-  ui.renderTabs(tabs, activeNoteId);
+  // Tabs UI removed - this function is no longer needed
 }
 
 function selectNote(id) {
@@ -132,9 +130,24 @@ function selectNote(id) {
   
   ui.updateEditor(note);
   renderTabs();
+  
+  // Always focus the editor
+  ui.elements.editor.focus();
 }
 
 function createNewNote() {
+  // Check if there's already an empty note
+  const notes = store.getNotes();
+  const existingEmpty = notes.find(n => !n.content || n.content.trim() === '');
+  
+  if (existingEmpty) {
+    // Open the existing empty note instead of creating a new one
+    closeSpotlight();
+    openTab(existingEmpty.id);
+    ui.elements.editor.focus();
+    return;
+  }
+  
   const newNote = store.createNote();
   closeSpotlight();
   openTab(newNote.id);
@@ -145,11 +158,10 @@ function createNewNote() {
 
 function setupEventListeners() {
   // Global Shortcuts
-  // Global Shortcuts
   window.addEventListener('keydown', (e) => {
     const isCmdOrCtrl = e.metaKey || e.ctrlKey;
 
-    // Cmd+K -> Toggle Spotlight
+    // Cmd+K -> Toggle Spotlight (Search)
     if (isCmdOrCtrl && e.code === 'KeyK') {
       e.preventDefault();
       e.stopPropagation();
@@ -185,6 +197,22 @@ function setupEventListeners() {
     }
   }, { capture: true });
 
+  // Top Bar - New Note Button
+  ui.elements.topBarNewNoteBtn.addEventListener('click', () => {
+    createNewNote();
+  });
+
+  // Top Bar - Search Button (open spotlight)
+  ui.elements.topBarSearchBtn.addEventListener('click', () => {
+    if (isSpotlightOpen) {
+      closeSpotlight();
+    } else {
+      openSpotlight();
+    }
+  });
+
+
+
   // Spotlight Input
   ui.elements.spotlightInput.addEventListener('input', () => {
     spotlightIndex = 0;
@@ -200,36 +228,33 @@ function setupEventListeners() {
     }
   });
 
-  // Tab Bar Click
-  ui.elements.tabBar.addEventListener('click', (e) => {
-    // Check for close button
-    const closeBtn = e.target.closest('[data-action="close-tab"]');
-    if (closeBtn) {
-        e.stopPropagation();
-        closeTab(closeBtn.dataset.id);
-        return;
-    }
 
-    // Check for new tab button
-    const newTabBtn = e.target.closest('[data-action="new-tab"]');
-    if (newTabBtn) {
-        createNewNote();
-        return;
-    }
-
-    // Check for tab click
-    const tabEl = e.target.closest('[data-id]');
-    if (tabEl) {
-        selectNote(tabEl.dataset.id);
-    }
+  // Delete Button -> Show Delete Modal
+  ui.elements.deleteBtn.addEventListener('click', () => {
+    if (activeNoteId) ui.showDeleteModal();
   });
 
-  // Menu Button
-  ui.elements.menuBtn.addEventListener('click', openSpotlight);
-
-  // Delete Button
-  ui.elements.deleteBtn.addEventListener('click', () => {
-      if (activeNoteId) ui.showDeleteModal();
+  // Export Button -> Download note as text file
+  ui.elements.exportBtn.addEventListener('click', () => {
+    if (!activeNoteId) return;
+    
+    const notes = store.getNotes();
+    const currentNote = notes.find(n => n.id === activeNoteId);
+    if (!currentNote) return;
+    
+    const content = currentNote.content || '';
+    const firstLine = content.split('\n')[0].trim();
+    const filename = (firstLine || 'note') + '.txt';
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   });
 
   // Confirm Delete Button (Modal)
@@ -255,17 +280,37 @@ function setupEventListeners() {
     
     if (currentNote) {
       store.saveNote({ ...currentNote, content });
+      // Update title in bottom bar
+      const firstLine = content.split('\n')[0].trim();
+      const title = firstLine || 'New Note';
+      ui.updateNoteTitle(title);
+      // Update timestamp
       ui.updateTimestamp(Date.now());
-      ui.toggleBottomBarInfo(true);
-      renderTabs(); // Update tab title
-
+      renderTabs();
     }
   });
 
-  // Theme Toggle
-  if (ui.elements.themeBtn) {
-      ui.elements.themeBtn.addEventListener('click', () => {
-          ui.toggleTheme();
-      });
-  }
+  // Tab Bar Click (hidden but still functional)
+  ui.elements.tabBar.addEventListener('click', (e) => {
+    // Check for close button
+    const closeBtn = e.target.closest('[data-action="close-tab"]');
+    if (closeBtn) {
+        e.stopPropagation();
+        closeTab(closeBtn.dataset.id);
+        return;
+    }
+
+    // Check for new tab button
+    const newTabBtn = e.target.closest('[data-action="new-tab"]');
+    if (newTabBtn) {
+        createNewNote();
+        return;
+    }
+
+    // Check for tab click
+    const tabEl = e.target.closest('[data-id]');
+    if (tabEl) {
+        selectNote(tabEl.dataset.id);
+    }
+  });
 }

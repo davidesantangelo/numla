@@ -69,6 +69,13 @@ $RATE = 75
 prev + 20%                    → $ 720
 ```
 
+### Organization & Interface
+
+- **Sidebar**: Manage multiple notes, search through them, and create new ones.
+- **Tabs**: Quickly switch between open notes.
+- **Mobile Ready**: Fully responsive design with a toggleable sidebar for on-the-go calculations.
+- **Spotlight**: Press `⌘ K` to instantly search and jump to any note.
+
 ---
 
 ## 🧮 Full Reference

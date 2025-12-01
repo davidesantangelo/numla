@@ -26,19 +26,22 @@ export const ui = {
       spotlightOverlay: document.getElementById('spotlight-overlay'),
       spotlightInput: document.getElementById('spotlight-input'),
       spotlightList: document.getElementById('spotlight-list'),
-      tabBar: document.getElementById('tab-bar'),
       editor: document.getElementById('note-editor'),
       resultsDisplay: document.getElementById('results-display'),
       timestamp: document.getElementById('timestamp-display'),
-      menuBtn: document.getElementById('menu-btn'),
       deleteBtn: document.getElementById('delete-btn'),
+      exportBtn: document.getElementById('export-btn'),
       highlighter: document.getElementById('highlighter'),
       // Delete Modal Elements
       deleteModalOverlay: document.getElementById('delete-modal-overlay'),
       deleteModal: document.getElementById('delete-modal'),
       confirmDeleteBtn: document.getElementById('confirm-delete-btn'),
       cancelDeleteBtn: document.getElementById('cancel-delete-btn'),
-      themeBtn: document.getElementById('theme-btn'),
+      noteTitleDisplay: document.getElementById('note-title-display'),
+      // Top Bar Elements
+      topBarNewNoteBtn: document.getElementById('top-bar-new-note-btn'),
+      topBarSearchBtn: document.getElementById('top-bar-search-btn'),
+      topBarThemeToggle: document.getElementById('top-bar-theme-toggle'),
     };
 
     this.initTheme();
@@ -67,8 +70,15 @@ export const ui = {
         this.hideDeleteModal();
     });
 
+    // Theme Toggle Event (Top Bar)
+    this.elements.topBarThemeToggle.addEventListener('click', () => this.toggleTheme());
+
     console.log('UI Initialized');
   },
+
+
+
+
 
   updateHighlighter(text) {
       // Escape HTML first
@@ -79,9 +89,10 @@ export const ui = {
       // Use amber-600 for light mode (readable) and yellow-400 for dark mode
       html = html.replace(/^#(.*$)/gm, '<span class="text-amber-600 dark:text-yellow-400">#$1</span>');
       
-      // Variable Highlighting ($VAR_NAME)
+      // Variable Assignment Highlighting (var = value or $var = value)
+      // Match variable names (with or without $) followed by = and a value
       // Use teal-600 for both modes - works well on both light and dark backgrounds
-      html = html.replace(/(\$[A-Z_][A-Z0-9_]*)/gi, '<span class="text-teal-600">$1</span>');
+      html = html.replace(/^(\$?[a-zA-Z_][a-zA-Z0-9_]*)\s*(=)/gm, '<span class="text-teal-600">$1</span> $2');
       
       // Currency Highlighting (Purple)
       // Highlight common currency codes (case insensitive)
@@ -120,40 +131,7 @@ export const ui = {
       }, 300);
   },
 
-  renderTabs(tabs, activeTabId) {
-    this.elements.tabBar.innerHTML = '';
-    
-    tabs.forEach(tab => {
-        const el = document.createElement('div');
-        const isActive = tab.id === activeTabId;
-        
-        el.className = `flex items-center gap-2 px-4 py-3 text-xs font-mono border-r border-zinc-200 dark:border-zinc-900 cursor-pointer transition-colors min-w-[120px] max-w-[200px] group ${
-            isActive 
-                ? 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-white' 
-                : 'bg-zinc-50 dark:bg-black text-zinc-400 dark:text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-950 hover:text-zinc-600 dark:hover:text-zinc-300'
-        }`;
-        
-        const title = tab.content.split('\n')[0] || 'Untitled';
-        
-        el.innerHTML = `
-            <span class="truncate flex-1">${this._escapeHtml(title)}</span>
-            <button class="opacity-0 group-hover:opacity-100 hover:text-red-500 transition-opacity p-1 rounded" data-action="close-tab" data-id="${tab.id}">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-        `;
-        
-        el.dataset.id = tab.id;
-        this.elements.tabBar.appendChild(el);
-    });
 
-    // Add New Tab Button
-    const newTabBtn = document.createElement('button');
-    newTabBtn.className = 'flex items-center justify-center px-4 py-3 text-zinc-400 dark:text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors border-r border-zinc-200 dark:border-zinc-900';
-    newTabBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
-    newTabBtn.dataset.action = 'new-tab';
-    newTabBtn.title = 'New Tab';
-    this.elements.tabBar.appendChild(newTabBtn);
-  },
 
   toggleSpotlight(show) {
     if (show) {
@@ -164,6 +142,8 @@ export const ui = {
         this.elements.editor.focus();
     }
   },
+
+
 
   renderSpotlightItems(notes, activeIndex = 0) {
     this.elements.spotlightList.innerHTML = '';
@@ -181,7 +161,9 @@ export const ui = {
           : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 hover:text-zinc-700 dark:hover:text-zinc-200'
       }`;
       
-      const title = note.content.split('\n')[0] || 'Untitled Note';
+      const content = note.content || '';
+      const firstLine = content.split('\n')[0].trim();
+      const title = firstLine || 'New Note';
       const date = new Date(note.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 
       el.innerHTML = `
@@ -196,49 +178,78 @@ export const ui = {
   },
 
   updateEditor(note) {
+    const defaultPlaceholder = `Start typing your calculation...
+
+Examples:
+100 + 50
+20% of 150
+$100 in EUR
+tax = 22%
+price = 1000
+price + tax`;
+
     if (!note) {
       this.elements.editor.value = '';
-      this.elements.editor.placeholder = 'Create a new note...';
+      this.elements.editor.placeholder = defaultPlaceholder;
       this.elements.editor.disabled = true;
-      this.elements.timestamp.textContent = '';
-      this.elements.deleteBtn.disabled = true;
-      this.elements.deleteBtn.classList.add('opacity-0');
-      this.toggleBottomBarInfo(false);
+      this.updateNoteTitle('New Note');
+      this.updateTimestamp(Date.now());
       this.renderResults([]);
       this.updateHighlighter('');
       return;
     }
 
     this.elements.editor.disabled = false;
-    this.elements.editor.placeholder = 'Start typing...';
+    this.elements.editor.placeholder = defaultPlaceholder;
     this.elements.editor.value = note.content;
-    this.elements.deleteBtn.disabled = false;
-    this.elements.deleteBtn.classList.remove('opacity-0');
     
     this.calculateAndRender(note.content);
     this.updateHighlighter(note.content);
 
-    // Hide timestamp and delete if note is empty (first time UX)
-    this.toggleBottomBarInfo(!!(note.content && note.content.trim() !== ''));
+    // Update title
+    const content = note.content || '';
+    const firstLine = content.split('\n')[0].trim();
+    const title = firstLine || 'New Note';
+    this.updateNoteTitle(title);
     
-    if (note.content && note.content.trim() !== '') {
-      this.updateTimestamp(note.updatedAt);
+    // Update timestamp (always show date, even for new notes)
+    this.updateTimestamp(note.updatedAt || note.createdAt || Date.now());
+  },
+
+  updateNoteTitle(title) {
+    if (this.elements.noteTitleDisplay) {
+      this.elements.noteTitleDisplay.textContent = title || 'New Note';
     }
   },
 
-  toggleBottomBarInfo(show) {
-      const bottomBar = document.getElementById('bottom-bar');
-      const conditionalSeparators = document.querySelectorAll('#bottom-bar .separator-conditional');
-      
-      if (show) {
-          this.elements.timestamp.style.display = 'block';
-          this.elements.deleteBtn.style.display = 'block';
-          conditionalSeparators.forEach(s => s.style.display = 'block');
-      } else {
-          this.elements.timestamp.style.display = 'none';
-          this.elements.deleteBtn.style.display = 'none';
-          conditionalSeparators.forEach(s => s.style.display = 'none');
+  updateTimestamp(timestamp) {
+    if (!this.elements.timestamp) return;
+    
+    if (!timestamp) {
+      this.elements.timestamp.textContent = '';
+      return;
+    }
+    
+    try {
+      const date = new Date(timestamp);
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        this.elements.timestamp.textContent = '';
+        return;
       }
+      
+      this.elements.timestamp.textContent = date.toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      this.elements.timestamp.textContent = '';
+    }
   },
 
   calculateAndRender(text) {
@@ -256,12 +267,6 @@ export const ui = {
 
   renderResults(results) {
       this.elements.resultsDisplay.innerHTML = results.map(r => `<div>${r || '&nbsp;'}</div>`).join('');
-  },
-
-  updateTimestamp(timestamp) {
-    if (!timestamp) return;
-    const date = new Date(timestamp);
-    this.elements.timestamp.textContent = `${date.toLocaleString()}`;
   },
 
   _escapeHtml(unsafe) {
@@ -289,7 +294,7 @@ export const ui = {
         document.documentElement.classList.remove('dark');
     }
     localStorage.setItem('numla-theme', isDark ? 'dark' : 'light');
-    this.updateThemeIcon(isDark);
+    this.updateThemeSwitch(isDark);
  },
 
  toggleTheme() {
@@ -297,15 +302,8 @@ export const ui = {
     this.setTheme(!isDark);
  },
 
- updateThemeIcon(isDark) {
-    // If Dark Mode -> Show Sun (to switch to light)
-    // If Light Mode -> Show Moon (to switch to dark)
-    const icon = isDark 
-        ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
-        : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
-    
-    if (this.elements.themeBtn) {
-        this.elements.themeBtn.innerHTML = icon;
-    }
+ updateThemeSwitch(isDark) {
+    // Theme icons are automatically toggled via Tailwind's dark: classes
+    // No manual DOM manipulation needed
  }
 };

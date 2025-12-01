@@ -36,12 +36,23 @@ async function configureCurrencies() {
     if (currenciesConfigured) return;
     
     try {
+        // Ensure USD base unit exists first
+        try {
+            if (!math.Unit.isValuelessUnit('USD')) {
+                math.createUnit('USD', { aliases: ['dollar', 'dollars', 'usd'] });
+            }
+        } catch (e) {
+            // USD already exists, that's fine
+        }
+        
         // Fetch live rates
         await currencyService.fetchRates();
         const rates = currencyService.getRates();
         
-        // Update all available currencies with live rates
+        // Update all available currencies with live rates (except USD which is base)
         for (const [currency, rate] of Object.entries(rates)) {
+            if (currency === 'USD') continue; // Skip base currency
+            
             try {
                 const aliases = [
                     currency.toLowerCase(),
@@ -58,7 +69,7 @@ async function configureCurrencies() {
                     aliases 
                 }, { override: true });
             } catch (e) {
-                console.warn(`Failed to configure ${currency}:`, e);
+                console.warn(`Failed to configure ${currency}:`, e.message);
             }
         }
         
@@ -176,12 +187,17 @@ export class Calculator {
                             // If it's already a unit, try to convert it
                             result = numResult.to(currency);
                         } else {
-                            // Fallback: try the original expression
-                            result = math.evaluate(processed, this.scope);
+                            // Fallback: just use the number result without unit
+                            result = numResult;
                         }
                     } catch (e) {
-                        // If that fails, try the original expression
-                        result = math.evaluate(processed, this.scope);
+                        // Log error and try without the in clause
+                        console.warn(`Currency conversion failed for "${trimmed}":`, e.message);
+                        try {
+                            result = math.evaluate(withoutInClause, this.scope);
+                        } catch (e2) {
+                            throw e; // Re-throw original error
+                        }
                     }
                 } else {
                     result = math.evaluate(processed, this.scope);

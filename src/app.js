@@ -267,6 +267,14 @@ function setupEventListeners() {
       ui.updateTimestamp(Date.now());
       ui.toggleBottomBarInfo(true);
       renderTabs(); // Update tab title
+
     }
   });
+
+  // Theme Toggle
+  if (ui.elements.themeBtn) {
+      ui.elements.themeBtn.addEventListener('click', () => {
+          ui.toggleTheme();
+      });
+  }
 }

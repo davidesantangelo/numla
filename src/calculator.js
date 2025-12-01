@@ -7,6 +7,31 @@ const math = create(all);
 // Initialize currency service and configure units
 let currenciesConfigured = false;
 
+// Initialize basic currencies synchronously
+function initBasicCurrencies() {
+    try {
+        // Base currency
+        if (!math.Unit.isValuelessUnit('USD')) {
+            math.createUnit('USD', { aliases: ['dollar', 'dollars', 'usd'] });
+        }
+        // Common currencies with approximate rates
+        if (!math.Unit.isValuelessUnit('EUR')) {
+            math.createUnit('EUR', { definition: '0.92 USD', aliases: ['euro', 'euros', 'eur'] });
+        }
+        if (!math.Unit.isValuelessUnit('GBP')) {
+            math.createUnit('GBP', { definition: '0.79 USD', aliases: ['pound', 'pounds', 'gbp'] });
+        }
+        if (!math.Unit.isValuelessUnit('JPY')) {
+            math.createUnit('JPY', { definition: '0.0067 USD', aliases: ['yen', 'jpy'] });
+        }
+    } catch (e) {
+        console.warn('Failed to init basic currencies:', e);
+    }
+}
+
+// Initialize basic currencies immediately
+initBasicCurrencies();
+
 async function configureCurrencies() {
     if (currenciesConfigured) return;
     
@@ -15,13 +40,8 @@ async function configureCurrencies() {
         await currencyService.fetchRates();
         const rates = currencyService.getRates();
         
-        // Base currency
-        math.createUnit('USD', { aliases: ['dollar', 'dollars', 'usd'] });
-        
-        // Configure all available currencies with live rates
+        // Update all available currencies with live rates
         for (const [currency, rate] of Object.entries(rates)) {
-            if (currency === 'USD') continue; // Skip base currency
-            
             try {
                 const aliases = [
                     currency.toLowerCase(),
@@ -30,15 +50,15 @@ async function configureCurrencies() {
                     currency + 's'
                 ];
                 
-                // Create unit based on USD rate
+                // Create or override unit based on USD rate
                 // API returns 1 USD = rate * Currency
                 // So 1 Currency = (1 / rate) USD
                 math.createUnit(currency, { 
                     definition: `${1 / rate} USD`, 
                     aliases 
-                });
+                }, { override: true });
             } catch (e) {
-                // Unit might already exist, ignore
+                console.warn(`Failed to configure ${currency}:`, e);
             }
         }
         
@@ -50,11 +70,8 @@ async function configureCurrencies() {
         currenciesConfigured = true;
         console.log('Currencies configured with live rates');
     } catch (e) {
-        console.error('Failed to configure currencies:', e);
-        // Fallback to basic configuration
-        math.createUnit('USD', { aliases: ['dollar', 'dollars', 'usd'] });
-        math.createUnit('EUR', { definition: '1.05 USD', aliases: ['euro', 'euros', 'Euro', 'Euros', 'eur'] }); // Approx
-        math.createUnit('GBP', { definition: '1.26 USD', aliases: ['pound', 'pounds', 'Pound', 'Pounds', 'gbp'] }); // Approx
+        console.error('Failed to configure live currencies:', e);
+        currenciesConfigured = true; // Mark as configured even with fallback
     }
 }
 
@@ -69,6 +86,12 @@ export class Calculator {
     }
 
     evaluate(text) {
+        // Ensure currencies are configured (non-blocking for initial load)
+        if (!currenciesConfigured) {
+            // If not ready yet, we'll use whatever is available
+            // The UI will call waitForReady() to ensure currencies load eventually
+        }
+        
         const lines = text.split('\n');
         const results = [];
         this.scope = {}; // Reset scope
@@ -84,6 +107,12 @@ export class Calculator {
             if (!trimmed) {
                 runningSum = 0;
                 runningCount = 0;
+                results.push('');
+                return;
+            }
+
+            // Skip comments (lines starting with #)
+            if (trimmed.startsWith('#')) {
                 results.push('');
                 return;
             }
@@ -116,11 +145,47 @@ export class Calculator {
             let processed = this._preprocess(trimmed);
 
             try {
-                // Formatting for mathjs
-                processed = processed.replace(/(\d)\.(\d{3})/g, '$1$2'); // Remove thousands separator
-                processed = processed.replace(/(\d),(\d)/g, '$1.$2');   // Replace decimal separator
+                // Replace unicode math symbols with standard operators
+                processed = processed.replace(/×/g, '*');  // Multiplication sign
+                processed = processed.replace(/÷/g, '/');  // Division sign
+                processed = processed.replace(/−/g, '-');  // Minus sign (unicode)
+                
+                // Formatting for mathjs - handle European number format
+                // First, handle thousands separator (1.000.000 -> 1000000)
+                processed = processed.replace(/(\d)\.(\d{3})(?=[.\s\D]|$)/g, '$1$2');
+                // Then, replace decimal comma with dot (0,75 -> 0.75)
+                processed = processed.replace(/(\d),(\d)/g, '$1.$2');
 
-                const result = math.evaluate(processed, this.scope);
+                // Check if this line has "in CURRENCY" pattern
+                const inCurrencyMatch = trimmed.match(/\s+in\s+([A-Z]{3})\s*$/i);
+                let result;
+                
+                if (inCurrencyMatch) {
+                    // Expression like "(5600 + 4%) in EUR"
+                    // Remove the "in CURRENCY" part and evaluate the expression first
+                    const withoutInClause = processed.replace(/\s+in\s+[A-Z]{3}\s*$/i, '');
+                    const currency = inCurrencyMatch[1].toUpperCase();
+                    
+                    try {
+                        const numResult = math.evaluate(withoutInClause, this.scope);
+                        
+                        // If result is a plain number, attach the currency unit
+                        if (typeof numResult === 'number' && !isNaN(numResult)) {
+                            result = math.unit(numResult, currency);
+                        } else if (numResult && numResult.isUnit) {
+                            // If it's already a unit, try to convert it
+                            result = numResult.to(currency);
+                        } else {
+                            // Fallback: try the original expression
+                            result = math.evaluate(processed, this.scope);
+                        }
+                    } catch (e) {
+                        // If that fails, try the original expression
+                        result = math.evaluate(processed, this.scope);
+                    }
+                } else {
+                    result = math.evaluate(processed, this.scope);
+                }
                 
                 const isInformational = /\b(sum|total|avg|mean)\b/i.test(trimmed);
 
@@ -167,17 +232,29 @@ export class Calculator {
     }
 
     _removeTrailingResult(text) {
-        const trailingResultRegex = /\s*=\s*[\d.,\s]+[a-zA-Z%]*$/; // Expanded to catch units/dates potentially
+        // Only remove auto-generated results at the end of a line
+        // Auto-generated results look like: "expression = result" where expression contains math
+        // We should NOT remove: "$VAR = 2000" (this is an assignment)
+        // We SHOULD remove: "5 + 3 = 8" (result appended to expression)
+        
+        // Check if this is a simple assignment (variable = value with no operators in the value)
+        const simpleAssignmentRegex = /^[\$_a-zA-Z][\$_a-zA-Z0-9]*\s*=\s*[\d.,\s]+$/;
+        if (simpleAssignmentRegex.test(text)) {
+            // This is a simple assignment like "$VAR = 2000", don't strip
+            return text;
+        }
+        
+        // Only strip trailing " = number" if there's already math in the expression
+        const trailingResultRegex = /\s*=\s*[\d.,\s]+[a-zA-Z%€$£¥]*$/;
         const match = text.match(trailingResultRegex);
         if (match) {
             const partBefore = text.substring(0, match.index);
-            if (!partBefore.includes('=')) {
-                 // Avoid stripping if it's an equation assignment like "x = 10"
-                 // But "x = 10" is assignment, " = 10" is result.
-                 // If the line is just "x = 10", match.index might be after x.
-                 // We want to strip only if it looks like an auto-generated result.
-                 // Simple heuristic: if the part before is valid code, keep it.
-                 return partBefore;
+            // Only strip if the part before contains actual math operators
+            // and is not just a variable assignment
+            if (partBefore.includes('+') || partBefore.includes('-') || 
+                partBefore.includes('*') || partBefore.includes('/') ||
+                partBefore.includes('(') || partBefore.includes('%')) {
+                return partBefore;
             }
         }
         return text;
@@ -189,23 +266,31 @@ export class Calculator {
         // Heuristic: Start of line, text, colon, space.
         text = text.replace(/^[a-zA-Z\s]+:\s*/, '');
 
+        // Handle $VARIABLE_NAME style variables (Numi-style)
+        // Convert $VAR_NAME to _VAR_NAME for mathjs compatibility
+        // Must be done BEFORE currency symbol handling
+        text = text.replace(/\$([A-Z_][A-Z0-9_]*)/gi, '_$1');
+
         // Handle Currency Symbols
-        // "$10" -> "10 USD"
-        text = text.replace(/\$(\d+(?:\.\d+)?)/g, '$1 USD');
+        // "$10" -> "10 USD" (only when $ is followed by a number)
+        text = text.replace(/\$(\d+(?:[.,]\d+)?)/g, '$1 USD');
         // "€10" -> "10 EUR"
-        text = text.replace(/€(\d+(?:\.\d+)?)/g, '$1 EUR');
+        text = text.replace(/€(\d+(?:[.,]\d+)?)/g, '$1 EUR');
         // "£10" -> "10 GBP"
-        text = text.replace(/£(\d+(?:\.\d+)?)/g, '$1 GBP');
+        text = text.replace(/£(\d+(?:[.,]\d+)?)/g, '$1 GBP');
 
         // Handle "tea spoons" -> "teaspoons"
         text = text.replace(/tea\s+spoons/gi, 'teaspoons');
 
-        // Wrap "in" operations in parentheses to enforce precedence
-        // "sum in USD - 4%" -> "(sum in USD) - 4%"
-        // "4 GBP in Euro" -> "(4 GBP in Euro)"
-        // Regex: (Content) in (Unit)
-        // We assume Unit is a single word (after tea spoons replacement)
-        text = text.replace(/(.+?)\s+in\s+([a-zA-Z_$]+)/gi, '($1 in $2)');
+        // Handle "in CURRENCY" operations
+        // If left side is a number (not a unit), treat it as already being in that currency
+        // "(5600 + 4%) in EUR" -> "(5600 + 4%) EUR" (attach currency unit)
+        // "10 USD in EUR" -> "(10 USD to EUR)" (convert between currencies)
+        // We'll do this transformation after evaluation, not here
+        // For now, just uppercase the currency code
+        text = text.replace(/\s+in\s+([a-zA-Z_$]+)/gi, (match, unit) => {
+            return ` in ${unit.toUpperCase()}`;
+        });
 
         // "X% of what is Y" -> "Y / X%"
         // Regex: (Percentage) of what is (Value)
@@ -282,8 +367,33 @@ export class Calculator {
                 useGrouping: true 
             }).format(result);
         } else if (result && result.isUnit) {
-            // Format unit nicely
-            formatted = result.format({ precision: 4 }); // Use mathjs formatting
+            // Check if it's a currency unit
+            const unitName = result.units[0]?.unit?.name;
+            const value = result.toNumber(unitName);
+            
+            const currencySymbols = {
+                'EUR': '€',
+                'USD': '$',
+                'GBP': '£',
+                'JPY': '¥',
+                'CHF': 'CHF',
+                'CAD': 'CA$',
+                'AUD': 'A$'
+            };
+            
+            if (currencySymbols[unitName]) {
+                // Format as currency with Italian number formatting
+                const formattedNumber = new Intl.NumberFormat('it-IT', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                    useGrouping: true
+                }).format(value);
+                
+                formatted = `${currencySymbols[unitName]} ${formattedNumber}`;
+            } else {
+                // Format other units nicely
+                formatted = result.format({ precision: 4 });
+            }
         } else if (result instanceof Date) {
             formatted = this._formatDate(result);
         } else {

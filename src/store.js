@@ -1,4 +1,6 @@
 const STORAGE_KEY = 'numla-notes';
+const MAX_NOTES = 500; // Maximum number of notes to prevent memory issues
+const MAX_NOTE_SIZE = 500000; // 500KB max per note
 
 export const store = {
   getNotes() {
@@ -30,6 +32,18 @@ export const store = {
   },
 
   saveNote(updatedNote) {
+    // Validate note structure
+    if (!updatedNote || !updatedNote.id) {
+      console.error('Invalid note: missing id');
+      return null;
+    }
+    
+    // Limit content size
+    if (updatedNote.content && updatedNote.content.length > MAX_NOTE_SIZE) {
+      updatedNote.content = updatedNote.content.substring(0, MAX_NOTE_SIZE);
+      console.warn('Note content truncated to prevent storage issues');
+    }
+    
     const notes = this.getNotes();
     const existingIndex = notes.findIndex(n => n.id === updatedNote.id);
     
@@ -49,15 +63,26 @@ export const store = {
   },
 
   createNote() {
+    const notes = this.getNotes();
+    
+    // Check note limit
+    if (notes.length >= MAX_NOTES) {
+      // Remove oldest notes to make room
+      const sortedByDate = [...notes].sort((a, b) => a.updatedAt - b.updatedAt);
+      const toRemove = sortedByDate.slice(0, notes.length - MAX_NOTES + 1);
+      toRemove.forEach(n => this.deleteNote(n.id));
+      console.warn(`Removed ${toRemove.length} old notes to maintain limit`);
+    }
+    
     const newNote = {
       id: crypto.randomUUID(),
       content: '',
       createdAt: Date.now(),
       updatedAt: Date.now()
     };
-    const notes = this.getNotes();
-    notes.unshift(newNote);
-    this._persist(notes);
+    const updatedNotes = this.getNotes();
+    updatedNotes.unshift(newNote);
+    this._persist(updatedNotes);
     return newNote;
   },
 

@@ -64,10 +64,13 @@ function renderSpotlight() {
   const query = ui.elements.spotlightInput.value.toLowerCase();
   const notes = store.getNotes();
   
+  // Filter out empty notes (notes without content or with only whitespace)
+  const nonEmptyNotes = notes.filter(n => n.content && n.content.trim() !== '');
+  
   if (query) {
-    filteredNotes = notes.filter(n => n.content.toLowerCase().includes(query));
+    filteredNotes = nonEmptyNotes.filter(n => n.content.toLowerCase().includes(query));
   } else {
-    filteredNotes = notes;
+    filteredNotes = nonEmptyNotes;
   }
   
   // Reset index if out of bounds

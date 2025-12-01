@@ -1,7 +1,22 @@
 import { Calculator } from './calculator.js';
 
+// Debounce utility function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
 export const ui = {
   calculator: new Calculator(),
+  lastCalculatedText: '',
+  lastResults: [],
   
   elements: {},
 
@@ -222,8 +237,16 @@ export const ui = {
   },
 
   calculateAndRender(text) {
+      // Skip calculation if text hasn't changed
+      if (text === this.lastCalculatedText) {
+          return this.lastResults;
+      }
+      
       const results = this.calculator.evaluate(text);
+      this.lastCalculatedText = text;
+      this.lastResults = results;
       this.renderResults(results);
+      return results;
   },
 
   renderResults(results) {

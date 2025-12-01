@@ -97,13 +97,24 @@ export class Calculator {
     }
 
     evaluate(text) {
-        // Ensure currencies are configured (non-blocking for initial load)
-        if (!currenciesConfigured) {
-            // If not ready yet, we'll use whatever is available
-            // The UI will call waitForReady() to ensure currencies load eventually
+        // Input validation
+        if (typeof text !== 'string') {
+            return [];
+        }
+        
+        // Limit input size to prevent performance issues
+        const MAX_INPUT_LENGTH = 100000;
+        if (text.length > MAX_INPUT_LENGTH) {
+            text = text.substring(0, MAX_INPUT_LENGTH);
         }
         
         const lines = text.split('\n');
+        
+        // Limit number of lines to prevent performance issues
+        const MAX_LINES = 1000;
+        if (lines.length > MAX_LINES) {
+            lines.length = MAX_LINES;
+        }
         const results = [];
         this.scope = {}; // Reset scope
         
@@ -206,15 +217,12 @@ export class Calculator {
                 const isInformational = /\b(sum|total|avg|mean)\b/i.test(trimmed);
 
                 if (!isInformational) {
-                    if (typeof result === 'number' && !isNaN(result)) {
+                    if (typeof result === 'number' && !isNaN(result) && isFinite(result)) {
                         if (runningSum === 0 || typeof runningSum === 'number') {
                             runningSum += result;
-                        } else {
-                            // If runningSum is Unit and result is number, we can't add easily.
-                            // For now, ignore or reset? 
-                            // Numi behavior: usually keeps running sum if possible.
-                            // If we add number to unit, mathjs fails.
-                            // Let's just ignore this number for the sum?
+                        } else if (runningSum && runningSum.isUnit) {
+                            // If runningSum is Unit and result is number, reset sum to number
+                            runningSum = result;
                         }
                         runningCount++;
                         previousResult = result;
@@ -222,14 +230,16 @@ export class Calculator {
                     } else if (result && result.isUnit) {
                         if (runningSum === 0) {
                             runningSum = result;
-                        } else {
+                        } else if (runningSum && runningSum.isUnit) {
                             try {
                                 runningSum = math.add(runningSum, result);
                             } catch (e) {
-                                // Incompatible units (e.g. USD + kg)
-                                // Start new sum? Or ignore?
-                                // Let's ignore to be safe.
+                                // Incompatible units (e.g. USD + kg) - start new sum
+                                runningSum = result;
                             }
+                        } else {
+                            // runningSum is number, result is Unit - start new sum
+                            runningSum = result;
                         }
                         runningCount++;
                         previousResult = result;
@@ -377,6 +387,9 @@ export class Calculator {
         
         let formatted = '';
         if (typeof result === 'number') {
+            if (!isFinite(result)) {
+                return result === Infinity ? '∞' : result === -Infinity ? '-∞' : '';
+            }
             formatted = new Intl.NumberFormat('it-IT', { 
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 2,

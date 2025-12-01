@@ -7,6 +7,77 @@ const math = create(all);
 // Initialize currency service and configure units
 let currenciesConfigured = false;
 
+// Timezone mappings for natural language
+const TIMEZONE_MAP = {
+    // US timezones
+    'pst': 'America/Los_Angeles',
+    'pacific': 'America/Los_Angeles',
+    'pdt': 'America/Los_Angeles',
+    'mst': 'America/Denver',
+    'mountain': 'America/Denver',
+    'mdt': 'America/Denver',
+    'cst': 'America/Chicago',
+    'central': 'America/Chicago',
+    'cdt': 'America/Chicago',
+    'est': 'America/New_York',
+    'eastern': 'America/New_York',
+    'edt': 'America/New_York',
+    'hst': 'Pacific/Honolulu',
+    'akst': 'America/Anchorage',
+    'akdt': 'America/Anchorage',
+    
+    // Cities
+    'new york': 'America/New_York',
+    'los angeles': 'America/Los_Angeles',
+    'chicago': 'America/Chicago',
+    'denver': 'America/Denver',
+    'london': 'Europe/London',
+    'paris': 'Europe/Paris',
+    'berlin': 'Europe/Berlin',
+    'madrid': 'Europe/Madrid',
+    'rome': 'Europe/Rome',
+    'milan': 'Europe/Rome',
+    'amsterdam': 'Europe/Amsterdam',
+    'brussels': 'Europe/Brussels',
+    'zurich': 'Europe/Zurich',
+    'vienna': 'Europe/Vienna',
+    'stockholm': 'Europe/Stockholm',
+    'oslo': 'Europe/Oslo',
+    'copenhagen': 'Europe/Copenhagen',
+    'helsinki': 'Europe/Helsinki',
+    'moscow': 'Europe/Moscow',
+    'dubai': 'Asia/Dubai',
+    'mumbai': 'Asia/Kolkata',
+    'delhi': 'Asia/Kolkata',
+    'bangalore': 'Asia/Kolkata',
+    'singapore': 'Asia/Singapore',
+    'hong kong': 'Asia/Hong_Kong',
+    'hkt': 'Asia/Hong_Kong',
+    'tokyo': 'Asia/Tokyo',
+    'jst': 'Asia/Tokyo',
+    'seoul': 'Asia/Seoul',
+    'kst': 'Asia/Seoul',
+    'shanghai': 'Asia/Shanghai',
+    'beijing': 'Asia/Shanghai',
+    'cst china': 'Asia/Shanghai',
+    'sydney': 'Australia/Sydney',
+    'aest': 'Australia/Sydney',
+    'aedt': 'Australia/Sydney',
+    'melbourne': 'Australia/Melbourne',
+    'auckland': 'Pacific/Auckland',
+    'nzst': 'Pacific/Auckland',
+    'nzdt': 'Pacific/Auckland',
+    
+    // Other timezone codes
+    'gmt': 'Etc/GMT',
+    'utc': 'Etc/UTC',
+    'bst': 'Europe/London',
+    'cet': 'Europe/Paris',
+    'cest': 'Europe/Paris',
+    'ist': 'Asia/Kolkata',
+    'sgt': 'Asia/Singapore',
+};
+
 // Initialize basic currencies synchronously
 function initBasicCurrencies() {
     try {
@@ -29,8 +100,33 @@ function initBasicCurrencies() {
     }
 }
 
+// Initialize CSS units
+function initCSSUnits() {
+    try {
+        // px is base unit for CSS
+        if (!math.Unit.isValuelessUnit('px')) {
+            math.createUnit('px', { aliases: ['pixel', 'pixels'] });
+        }
+        // pt = 1/72 inch, and at 96 PPI, 1 inch = 96px, so 1pt = 96/72 px = 1.333px
+        if (!math.Unit.isValuelessUnit('pt')) {
+            math.createUnit('pt', { definition: '1.333333333 px', aliases: ['point', 'points'] });
+        }
+        // em defaults to 16px
+        if (!math.Unit.isValuelessUnit('em')) {
+            math.createUnit('em', { definition: '16 px', aliases: ['ems'] });
+        }
+        // rem same as em by default
+        if (!math.Unit.isValuelessUnit('rem')) {
+            math.createUnit('rem', { definition: '16 px', aliases: ['rems'] });
+        }
+    } catch (e) {
+        console.warn('Failed to init CSS units:', e);
+    }
+}
+
 // Initialize basic currencies immediately
 initBasicCurrencies();
+initCSSUnits();
 
 async function configureCurrencies() {
     if (currenciesConfigured) return;
@@ -71,11 +167,6 @@ async function configureCurrencies() {
             } catch (e) {
                 console.warn(`Failed to configure ${currency}:`, e.message);
             }
-        }
-        
-        // Custom units
-        if (!math.Unit.isValuelessUnit('tsp')) {
-            math.createUnit('tsp', { definition: '4.92892 ml', aliases: ['teaspoon', 'teaspoons'] }, { override: true });
         }
         
         currenciesConfigured = true;
@@ -139,6 +230,19 @@ export class Calculator {
                 return;
             }
 
+            // Skip lines starting with //
+            if (trimmed.startsWith('//')) {
+                results.push('');
+                return;
+            }
+
+            // Check for timezone query first (e.g., "PST time", "time in Berlin", "New York time")
+            const timezoneResult = this._evaluateTimezone(trimmed);
+            if (timezoneResult !== null) {
+                results.push(this._formatResult(timezoneResult));
+                return;
+            }
+
             // Inject dynamic tokens
             this.scope['sum'] = runningSum;
             this.scope['total'] = runningSum;
@@ -165,6 +269,14 @@ export class Calculator {
 
             // Preprocess for Natural Language Math
             let processed = this._preprocess(trimmed);
+
+            // Check for format modifiers (in hex, in bin, in oct, in sci)
+            let outputFormat = null;
+            const formatMatch = processed.match(/\s+in\s+(hex|bin|oct|sci|scientific|binary|octal|hexadecimal)\s*$/i);
+            if (formatMatch) {
+                outputFormat = formatMatch[1].toLowerCase();
+                processed = processed.replace(/\s+in\s+(hex|bin|oct|sci|scientific|binary|octal|hexadecimal)\s*$/i, '');
+            }
 
             try {
                 // Replace unicode math symbols with standard operators
@@ -247,6 +359,11 @@ export class Calculator {
                     }
                 }
                 
+                // Apply output format if specified
+                if (outputFormat && typeof result === 'number') {
+                    result = this._formatWithBase(result, outputFormat);
+                }
+                
                 results.push(this._formatResult(result));
             } catch (e) {
                 console.warn(`Evaluation failed for line "${trimmed}":`, e.message);
@@ -287,17 +404,33 @@ export class Calculator {
     }
 
     _preprocess(text) {
-        // Remove "Label: " prefix (e.g. "Price: $10")
-        // Be careful not to match "10:30" (time) or "10 / 2" (if colon used for division? No)
-        // Heuristic: Start of line, text, colon, space.
-        text = text.replace(/^[a-zA-Z\s]+:\s*/, '');
+        // Remove "Label: " prefix (e.g. "Price: $10", "Line 1: $10")
+        // Match: word characters, numbers, spaces followed by colon and space
+        // Be careful not to match time like "10:30"
+        text = text.replace(/^[a-zA-Z][a-zA-Z0-9\s]*:\s*/, '');
 
         // Handle $VARIABLE_NAME style variables (Numi-style)
         // Convert $VAR_NAME to _VAR_NAME for mathjs compatibility
         // Must be done BEFORE currency symbol handling
         text = text.replace(/\$([A-Z_][A-Z0-9_]*)/gi, '_$1');
 
-        // Handle Currency Symbols
+        // Handle Currency + Scale combinations FIRST (e.g., "$2k" -> "2000 USD")
+        text = text.replace(/\$(\d+(?:\.\d+)?)\s*k\b/gi, (_, num) => String(parseFloat(num) * 1000) + ' USD');
+        text = text.replace(/\$(\d+(?:\.\d+)?)\s*M\b/g, (_, num) => String(parseFloat(num) * 1000000) + ' USD');
+        text = text.replace(/\$(\d+(?:\.\d+)?)\s*(?:B|billion)\b/gi, (_, num) => String(parseFloat(num) * 1000000000) + ' USD');
+        text = text.replace(/€(\d+(?:\.\d+)?)\s*k\b/gi, (_, num) => String(parseFloat(num) * 1000) + ' EUR');
+        text = text.replace(/€(\d+(?:\.\d+)?)\s*M\b/g, (_, num) => String(parseFloat(num) * 1000000) + ' EUR');
+        text = text.replace(/£(\d+(?:\.\d+)?)\s*k\b/gi, (_, num) => String(parseFloat(num) * 1000) + ' GBP');
+        text = text.replace(/£(\d+(?:\.\d+)?)\s*M\b/g, (_, num) => String(parseFloat(num) * 1000000) + ' GBP');
+
+        // Handle scales: k (thousands), M (millions), B (billions)
+        text = text.replace(/(\d+(?:\.\d+)?)\s*k\b/gi, (_, num) => String(parseFloat(num) * 1000));
+        text = text.replace(/(\d+(?:\.\d+)?)\s*M\b/g, (_, num) => String(parseFloat(num) * 1000000));
+        text = text.replace(/(\d+(?:\.\d+)?)\s*(?:B|billion|billions)\b/gi, (_, num) => String(parseFloat(num) * 1000000000));
+        text = text.replace(/(\d+(?:\.\d+)?)\s*(?:thousand|thousands)\b/gi, (_, num) => String(parseFloat(num) * 1000));
+        text = text.replace(/(\d+(?:\.\d+)?)\s*(?:million|millions)\b/gi, (_, num) => String(parseFloat(num) * 1000000));
+
+        // Handle Currency Symbols (after scales)
         // "$10" -> "10 USD" (only when $ is followed by a number)
         text = text.replace(/\$(\d+(?:[.,]\d+)?)/g, '$1 USD');
         // "€10" -> "10 EUR"
@@ -307,6 +440,57 @@ export class Calculator {
 
         // Handle "tea spoons" -> "teaspoons"
         text = text.replace(/tea\s+spoons/gi, 'teaspoons');
+        text = text.replace(/table\s+spoons/gi, 'tablespoons');
+
+        // Handle cubic/square units: "cu cm" -> "cm^3", "cubic inches" -> "inch^3", "sq m" -> "m^2"
+        // Volume: cu, cubic, cb
+        text = text.replace(/\b(?:cu|cb)\s*(m|cm|mm|km|ft|feet|foot|in|inch|inches|yd|yard|yards|mi|mile|miles)\b/gi, (_, unit) => {
+            // Normalize unit names
+            let normalizedUnit = unit.toLowerCase();
+            if (normalizedUnit === 'feet' || normalizedUnit === 'foot') normalizedUnit = 'ft';
+            if (normalizedUnit === 'inches') normalizedUnit = 'inch';
+            if (normalizedUnit === 'yards') normalizedUnit = 'yard';
+            if (normalizedUnit === 'miles') normalizedUnit = 'mile';
+            return normalizedUnit + '^3';
+        });
+        text = text.replace(/\bcubic\s+(meter|meters|metre|metres|centimeter|centimeters|millimeter|millimeters|kilometer|kilometers|foot|feet|inch|inches|yard|yards|mile|miles|m|cm|mm|km|ft|in|yd|mi)\b/gi, (_, unit) => {
+            let normalizedUnit = unit.toLowerCase();
+            if (normalizedUnit === 'meters' || normalizedUnit === 'metre' || normalizedUnit === 'metres') normalizedUnit = 'm';
+            if (normalizedUnit === 'centimeters' || normalizedUnit === 'centimeter') normalizedUnit = 'cm';
+            if (normalizedUnit === 'millimeters' || normalizedUnit === 'millimeter') normalizedUnit = 'mm';
+            if (normalizedUnit === 'kilometers' || normalizedUnit === 'kilometer') normalizedUnit = 'km';
+            if (normalizedUnit === 'feet' || normalizedUnit === 'foot') normalizedUnit = 'ft';
+            if (normalizedUnit === 'inches') normalizedUnit = 'inch';
+            if (normalizedUnit === 'yards') normalizedUnit = 'yard';
+            if (normalizedUnit === 'miles') normalizedUnit = 'mile';
+            return normalizedUnit + '^3';
+        });
+        // cbm = cubic meters
+        text = text.replace(/\bcbm\b/gi, 'm^3');
+
+        // Area: sq, square
+        text = text.replace(/\b(?:sq)\s*(m|cm|mm|km|ft|feet|foot|in|inch|inches|yd|yard|yards|mi|mile|miles)\b/gi, (_, unit) => {
+            let normalizedUnit = unit.toLowerCase();
+            if (normalizedUnit === 'feet' || normalizedUnit === 'foot') normalizedUnit = 'ft';
+            if (normalizedUnit === 'inches') normalizedUnit = 'inch';
+            if (normalizedUnit === 'yards') normalizedUnit = 'yard';
+            if (normalizedUnit === 'miles') normalizedUnit = 'mile';
+            return normalizedUnit + '^2';
+        });
+        text = text.replace(/\bsquare\s+(meter|meters|metre|metres|centimeter|centimeters|millimeter|millimeters|kilometer|kilometers|foot|feet|inch|inches|yard|yards|mile|miles|m|cm|mm|km|ft|in|yd|mi)\b/gi, (_, unit) => {
+            let normalizedUnit = unit.toLowerCase();
+            if (normalizedUnit === 'meters' || normalizedUnit === 'metre' || normalizedUnit === 'metres') normalizedUnit = 'm';
+            if (normalizedUnit === 'centimeters' || normalizedUnit === 'centimeter') normalizedUnit = 'cm';
+            if (normalizedUnit === 'millimeters' || normalizedUnit === 'millimeter') normalizedUnit = 'mm';
+            if (normalizedUnit === 'kilometers' || normalizedUnit === 'kilometer') normalizedUnit = 'km';
+            if (normalizedUnit === 'feet' || normalizedUnit === 'foot') normalizedUnit = 'ft';
+            if (normalizedUnit === 'inches') normalizedUnit = 'inch';
+            if (normalizedUnit === 'yards') normalizedUnit = 'yard';
+            if (normalizedUnit === 'miles') normalizedUnit = 'mile';
+            return normalizedUnit + '^2';
+        });
+        // sqm = square meters
+        text = text.replace(/\bsqm\b/gi, 'm^2');
 
         // Handle "in CURRENCY" operations
         // If left side is a number (not a unit), treat it as already being in that currency
@@ -318,13 +502,69 @@ export class Calculator {
             return ` in ${unit.toUpperCase()}`;
         });
 
+        // Natural language operators (order matters - longer phrases first)
+        text = text.replace(/\s+multiplied\s+by\s+/gi, ' * ');
+        text = text.replace(/\s+divided\s+by\s+/gi, ' / ');
+        text = text.replace(/\s+divide\s+by\s+/gi, ' / ');
+        text = text.replace(/\s+divide\s+/gi, ' / ');
+        text = text.replace(/\s+times\s+/gi, ' * ');
+        text = text.replace(/\s+mul\s+/gi, ' * ');
+        text = text.replace(/\s+plus\s+/gi, ' + ');
+        text = text.replace(/\s+and\s+/gi, ' + ');
+        text = text.replace(/\s+with\s+/gi, ' + ');
+        text = text.replace(/\s+minus\s+/gi, ' - ');
+        text = text.replace(/\s+subtract\s+/gi, ' - ');
+        text = text.replace(/\s+without\s+/gi, ' - ');
+
         // "X% of what is Y" -> "Y / X%"
         // Regex: (Percentage) of what is (Value)
         // MUST BE BEFORE "X% of Y" to avoid conflict
         text = text.replace(/(\d+(?:\.\d+)?%)\s+of\s+what\s+is\s+(.+)/i, '($2) / $1');
 
+        // "X% on what is Y" -> solve for base where base + X% = Y
+        // If 5% on what is 105, then base = 105 / 1.05 = 100
+        text = text.replace(/(\d+(?:\.\d+)?)%\s+on\s+what\s+is\s+(.+)/i, (_, pct, value) => {
+            return `(${value}) / (1 + ${pct}/100)`;
+        });
+
+        // "X% off what is Y" -> solve for base where base - X% = Y
+        // If 5% off what is 95, then base = 95 / 0.95 = 100
+        text = text.replace(/(\d+(?:\.\d+)?)%\s+off\s+what\s+is\s+(.+)/i, (_, pct, value) => {
+            return `(${value}) / (1 - ${pct}/100)`;
+        });
+
+        // "X% on Y" -> Y + X% of Y = Y * (1 + X/100)
+        text = text.replace(/(\d+(?:\.\d+)?)%\s+on\s+(.+)/i, (_, pct, value) => {
+            return `(${value}) * (1 + ${pct}/100)`;
+        });
+
+        // "X% off Y" -> Y - X% of Y = Y * (1 - X/100)
+        text = text.replace(/(\d+(?:\.\d+)?)%\s+off\s+(.+)/i, (_, pct, value) => {
+            return `(${value}) * (1 - ${pct}/100)`;
+        });
+
+        // "X as a % of Y" -> (X / Y) * 100
+        text = text.replace(/(.+?)\s+as\s+a?\s*%\s+of\s+(.+)/i, (_, x, y) => {
+            return `((${x}) / (${y})) * 100`;
+        });
+
+        // "X as a % on Y" -> ((X - Y) / Y) * 100 (percentage increase)
+        text = text.replace(/(.+?)\s+as\s+a?\s*%\s+on\s+(.+)/i, (_, x, y) => {
+            return `(((${x}) - (${y})) / (${y})) * 100`;
+        });
+
+        // "X as a % off Y" -> ((Y - X) / Y) * 100 (percentage decrease)
+        text = text.replace(/(.+?)\s+as\s+a?\s*%\s+off\s+(.+)/i, (_, x, y) => {
+            return `(((${y}) - (${x})) / (${y})) * 100`;
+        });
+
         // "X% of Y" -> "X% * Y"
         text = text.replace(/(\d+(?:\.\d+)?%)\s+of\s+(.+)/i, '$1 * ($2)');
+        
+        // Remove trailing descriptive words AFTER percentage operations are handled
+        // (e.g., "5% discount" -> "5%", "prev - 5% discount" -> "prev - 5%")
+        // Don't remove "off" as it's used in percentage operations
+        text = text.replace(/(\d+%)\s+(?:discount|fee|tax|tip|markup|margin|bonus|interest|rate|increase|decrease|reduction|savings)\b/gi, '$1');
         
         return text;
     }
@@ -386,7 +626,30 @@ export class Calculator {
         }
         
         let formatted = '';
-        if (typeof result === 'number') {
+        
+        // Handle timezone results
+        if (result && result.type === 'time') {
+            const options = {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            };
+            if (result.timezone) {
+                options.timeZone = result.timezone;
+                options.timeZoneName = 'short';
+            }
+            formatted = new Intl.DateTimeFormat('en-US', options).format(result.date);
+        } else if (result && result.type === 'timeConversion') {
+            // Format time in target timezone
+            const options = {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+                timeZone: result.toTimezone,
+                timeZoneName: 'short'
+            };
+            formatted = new Intl.DateTimeFormat('en-US', options).format(result.date);
+        } else if (typeof result === 'number') {
             if (!isFinite(result)) {
                 return result === Infinity ? '∞' : result === -Infinity ? '-∞' : '';
             }
@@ -398,7 +661,6 @@ export class Calculator {
         } else if (result && result.isUnit) {
             // Check if it's a currency unit
             const unitName = result.units[0]?.unit?.name;
-            const value = result.toNumber(unitName);
             
             const currencySymbols = {
                 'EUR': '€',
@@ -410,7 +672,8 @@ export class Calculator {
                 'AUD': 'A$'
             };
             
-            if (currencySymbols[unitName]) {
+            if (unitName && currencySymbols[unitName]) {
+                const value = result.toNumber(unitName);
                 // Format as currency with Italian number formatting
                 const formattedNumber = new Intl.NumberFormat('it-IT', {
                     minimumFractionDigits: 0,
@@ -422,15 +685,24 @@ export class Calculator {
             } else {
                 // Format other units nicely
                 formatted = result.format({ precision: 4 });
+                
+                // Prettify units
+                formatted = formatted.replace(/\^2/g, '²');
+                formatted = formatted.replace(/\^3/g, '³');
+                formatted = formatted.replace(/\binch\b/g, '″');
+                formatted = formatted.replace(/\bdeg\b/g, '°');
             }
         } else if (result instanceof Date) {
             formatted = this._formatDate(result);
+        } else if (typeof result === 'string' && result.startsWith('sci:')) {
+            // Scientific notation result
+            formatted = result.substring(4);
         } else {
             formatted = result.toString();
         }
 
         // Apply purple color
-        return `<span class="text-purple-400 font-medium">${formatted}</span>`;
+        return `<span class="text-blue-400 font-medium">${formatted}</span>`;
     }
 
     _formatDate(date) {
@@ -440,5 +712,108 @@ export class Calculator {
             day: 'numeric',
             year: '2-digit'
         }).format(date);
+    }
+
+    _evaluateTimezone(text) {
+        const lowerText = text.toLowerCase().trim();
+        
+        // Pattern: "LOCATION time" or "time in LOCATION" or just "time" or "now"
+        // Also: "2:30 pm HKT in Berlin" (time conversion)
+        
+        // Check for simple "time" or "now"
+        if (lowerText === 'time' || lowerText === 'now') {
+            return { type: 'time', date: new Date(), timezone: null };
+        }
+        
+        // Pattern: "LOCATION time" (e.g., "PST time", "New York time", "Berlin time")
+        const locationTimeMatch = lowerText.match(/^(.+?)\s+time$/);
+        if (locationTimeMatch) {
+            const location = locationTimeMatch[1].trim();
+            const tz = TIMEZONE_MAP[location];
+            if (tz) {
+                return { type: 'time', date: new Date(), timezone: tz };
+            }
+        }
+        
+        // Pattern: "time in LOCATION" (e.g., "time in Madrid", "time in Tokyo")
+        const timeInMatch = lowerText.match(/^(?:time|now)\s+in\s+(.+)$/);
+        if (timeInMatch) {
+            const location = timeInMatch[1].trim();
+            const tz = TIMEZONE_MAP[location];
+            if (tz) {
+                return { type: 'time', date: new Date(), timezone: tz };
+            }
+        }
+        
+        // Pattern: "TIME TIMEZONE in LOCATION" (e.g., "2:30 pm HKT in Berlin")
+        const timeConversionMatch = text.match(/^(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\s+(\w+)\s+in\s+(.+)$/i);
+        if (timeConversionMatch) {
+            const timeStr = timeConversionMatch[1];
+            const fromTz = timeConversionMatch[2].toLowerCase();
+            const toLocation = timeConversionMatch[3].toLowerCase().trim();
+            
+            const fromTimezone = TIMEZONE_MAP[fromTz];
+            const toTimezone = TIMEZONE_MAP[toLocation];
+            
+            if (fromTimezone && toTimezone) {
+                // Parse the time
+                const parsedTime = this._parseTime(timeStr);
+                if (parsedTime) {
+                    // Create date in source timezone
+                    const now = new Date();
+                    const sourceDate = new Date(
+                        now.getFullYear(), 
+                        now.getMonth(), 
+                        now.getDate(),
+                        parsedTime.hours,
+                        parsedTime.minutes
+                    );
+                    
+                    return { 
+                        type: 'timeConversion', 
+                        date: sourceDate, 
+                        fromTimezone, 
+                        toTimezone 
+                    };
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    _parseTime(timeStr) {
+        // Parse time like "2:30 pm", "14:30", "2pm"
+        const match = timeStr.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i);
+        if (!match) return null;
+        
+        let hours = parseInt(match[1], 10);
+        const minutes = match[2] ? parseInt(match[2], 10) : 0;
+        const period = match[3]?.toLowerCase();
+        
+        if (period === 'pm' && hours !== 12) hours += 12;
+        if (period === 'am' && hours === 12) hours = 0;
+        
+        return { hours, minutes };
+    }
+
+    _formatWithBase(num, format) {
+        const intNum = Math.round(num);
+        switch (format) {
+            case 'hex':
+            case 'hexadecimal':
+                return `0x${intNum.toString(16).toUpperCase()}`;
+            case 'bin':
+            case 'binary':
+                return `0b${intNum.toString(2)}`;
+            case 'oct':
+            case 'octal':
+                return `0o${intNum.toString(8)}`;
+            case 'sci':
+            case 'scientific':
+                return num.toExponential(2);
+            default:
+                return num;
+        }
     }
 }

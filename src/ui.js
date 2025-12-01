@@ -75,8 +75,9 @@ export const ui = {
       let html = this._escapeHtml(text);
 
       // Yellow Comments Highlighting (# ...)
-      // We use a regex to find lines starting with # and wrap them in a yellow span
-      html = html.replace(/^#(.*$)/gm, '<span class="text-yellow-400">#$1</span>');
+      // We use a regex to find lines starting with # and wrap them in a span
+      // Use amber-600 for light mode (readable) and yellow-400 for dark mode
+      html = html.replace(/^#(.*$)/gm, '<span class="text-amber-600 dark:text-yellow-400">#$1</span>');
       
       // Currency Highlighting (Purple)
       // Highlight common currency codes (case insensitive)
@@ -193,7 +194,7 @@ export const ui = {
   updateEditor(note) {
     if (!note) {
       this.elements.editor.value = '';
-      this.elements.editor.placeholder = 'Press Cmd+N to create a new note...';
+      this.elements.editor.placeholder = 'Create a new note...';
       this.elements.editor.disabled = true;
       this.elements.timestamp.textContent = '';
       this.elements.deleteBtn.disabled = true;

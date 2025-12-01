@@ -229,4 +229,174 @@ describe('Calculator', () => {
             expect(cleaned).toBe('$VAR = 2000');
         });
     });
+
+    describe('Natural Language Operators', () => {
+        it('should handle "times" operator', () => {
+            const results = calc.evaluate('5 times 3');
+            expect(results[0]).toContain('15');
+        });
+
+        it('should handle "multiplied by" operator', () => {
+            const results = calc.evaluate('4 multiplied by 7');
+            expect(results[0]).toContain('28');
+        });
+
+        it('should handle "plus" operator', () => {
+            const results = calc.evaluate('10 plus 5');
+            expect(results[0]).toContain('15');
+        });
+
+        it('should handle "minus" operator', () => {
+            const results = calc.evaluate('20 minus 8');
+            expect(results[0]).toContain('12');
+        });
+
+        it('should handle "divided by" operator', () => {
+            const results = calc.evaluate('100 divided by 4');
+            expect(results[0]).toContain('25');
+        });
+
+        it('should handle "without" operator', () => {
+            const results = calc.evaluate('50 without 15');
+            expect(results[0]).toContain('35');
+        });
+    });
+
+    describe('Scales (k, M, B)', () => {
+        it('should handle k (thousands)', () => {
+            const results = calc.evaluate('2k + 500');
+            expect(results[0]).toContain('2.500');
+        });
+
+        it('should handle M (millions)', () => {
+            const results = calc.evaluate('1.5M');
+            expect(results[0]).toContain('1.500.000');
+        });
+
+        it('should handle billion', () => {
+            const results = calc.evaluate('2 billion');
+            expect(results[0]).toContain('2.000.000.000');
+        });
+
+        it('should handle "thousand"', () => {
+            const results = calc.evaluate('5 thousand');
+            expect(results[0]).toContain('5.000');
+        });
+
+        it('should handle "million"', () => {
+            const results = calc.evaluate('3 million');
+            expect(results[0]).toContain('3.000.000');
+        });
+    });
+
+    describe('Advanced Percentage Operations', () => {
+        it('should calculate "X% on Y" (add percentage)', () => {
+            const results = calc.evaluate('10% on 100');
+            expect(results[0]).toContain('110');
+        });
+
+        it('should calculate "X% off Y" (subtract percentage)', () => {
+            const results = calc.evaluate('20% off 100');
+            expect(results[0]).toContain('80');
+        });
+
+        it('should calculate "X as a % of Y"', () => {
+            const results = calc.evaluate('50 as a % of 200');
+            expect(results[0]).toContain('25');
+        });
+
+        it('should calculate "X% on what is Y"', () => {
+            // 5% on what is 105 -> 105 / 1.05 = 100
+            const results = calc.evaluate('5% on what is 105');
+            expect(results[0]).toContain('100');
+        });
+
+        it('should calculate "X% off what is Y"', () => {
+            // 20% off what is 80 -> 80 / 0.8 = 100
+            const results = calc.evaluate('20% off what is 80');
+            expect(results[0]).toContain('100');
+        });
+    });
+
+    describe('Number Format Conversion', () => {
+        it('should convert to hex', () => {
+            const results = calc.evaluate('255 in hex');
+            expect(results[0]).toContain('0xFF');
+        });
+
+        it('should convert to binary', () => {
+            const results = calc.evaluate('10 in bin');
+            expect(results[0]).toContain('0b1010');
+        });
+
+        it('should convert to octal', () => {
+            const results = calc.evaluate('64 in oct');
+            expect(results[0]).toContain('0o100');
+        });
+
+        it('should convert to scientific notation', () => {
+            const results = calc.evaluate('1500000 in sci');
+            expect(results[0]).toContain('1.50e+6');
+        });
+    });
+
+    describe('Timezone Support', () => {
+        it('should show current time for "time"', () => {
+            const results = calc.evaluate('time');
+            expect(results[0]).toMatch(/\d{1,2}:\d{2}\s*(AM|PM)/i);
+        });
+
+        it('should show current time for "now"', () => {
+            const results = calc.evaluate('now');
+            expect(results[0]).toMatch(/\d{1,2}:\d{2}\s*(AM|PM)/i);
+        });
+
+        it('should handle "LOCATION time"', () => {
+            const results = calc.evaluate('New York time');
+            expect(results[0]).toMatch(/\d{1,2}:\d{2}\s*(AM|PM)/i);
+        });
+
+        it('should handle "time in LOCATION"', () => {
+            const results = calc.evaluate('time in Tokyo');
+            expect(results[0]).toMatch(/\d{1,2}:\d{2}\s*(AM|PM)/i);
+        });
+    });
+
+    describe('CSS Units', () => {
+        it('should handle pixel calculations', () => {
+            const results = calc.evaluate('16 px + 32 px');
+            expect(results[0]).toContain('48');
+        });
+
+        it('should convert em to px', () => {
+            const results = calc.evaluate('2 em to px');
+            expect(results[0]).toContain('32');
+        });
+    });
+
+    describe('Volume Unit Aliases', () => {
+        it('should convert "cu" shorthand to cubic centimeters', () => {
+            const results = calc.evaluate('20 cu cm');
+            expect(results[0]).toContain('cm^3');
+        });
+
+        it('should handle "cubic" keyword for inches', () => {
+            const results = calc.evaluate('30 cubic inches');
+            expect(results[0]).toContain('inch^3');
+        });
+
+        it('should expand cbm to cubic meters', () => {
+            const results = calc.evaluate('11 cbm');
+            expect(results[0]).toContain('m^3');
+        });
+    });
+
+    describe('Comments', () => {
+        it('should skip lines starting with //', () => {
+            const results = calc.evaluate('// This is a comment\n5 + 5');
+            expect(results).toHaveLength(2);
+            expect(results[0]).toBe('');
+            expect(results[1]).toContain('10');
+        });
+    });
 });

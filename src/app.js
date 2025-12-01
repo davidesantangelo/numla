@@ -103,11 +103,8 @@ function closeTab(id) {
       const newIndex = Math.max(0, index - 1);
       selectNote(openTabs[newIndex]);
     } else {
-      // No tabs left
-      activeNoteId = null;
-      localStorage.removeItem(ACTIVE_TAB_KEY);
-      ui.updateEditor(null);
-      renderTabs();
+      // No tabs left - automatically create a new note
+      createNewNote();
     }
   } else {
     renderTabs();
@@ -164,15 +161,6 @@ function setupEventListeners() {
       return;
     }
 
-    // Cmd+W -> Close Tab
-    if (isCmdOrCtrl && e.code === 'KeyW') {
-        e.preventDefault();
-        e.stopPropagation();
-        if (activeNoteId) {
-            closeTab(activeNoteId);
-        }
-        return;
-    }
 
     // Spotlight Navigation
     if (isSpotlightOpen) {

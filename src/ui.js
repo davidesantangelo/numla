@@ -79,6 +79,10 @@ export const ui = {
       // Use amber-600 for light mode (readable) and yellow-400 for dark mode
       html = html.replace(/^#(.*$)/gm, '<span class="text-amber-600 dark:text-yellow-400">#$1</span>');
       
+      // Variable Highlighting ($VAR_NAME)
+      // Use teal-600 for both modes - works well on both light and dark backgrounds
+      html = html.replace(/(\$[A-Z_][A-Z0-9_]*)/gi, '<span class="text-teal-600">$1</span>');
+      
       // Currency Highlighting (Purple)
       // Highlight common currency codes (case insensitive)
       const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'SEK', 'NZD', 'KRW', 'SGD', 'NOK', 'MXN', 'INR', 'RUB', 'ZAR', 'TRY', 'BRL', 'TWD', 'DKK', 'PLN', 'THB', 'IDR', 'HUF', 'CZK', 'ILS', 'CLP', 'PHP', 'AED', 'COP', 'SAR', 'MYR', 'RON'];

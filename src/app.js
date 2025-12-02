@@ -119,7 +119,73 @@ function saveTabs() {
 }
 
 function renderTabs() {
-  // Tabs UI removed - this function is no longer needed
+  if (!ui.elements.tabBar) return;
+  
+  const notes = store.getNotes();
+  
+  ui.elements.tabBar.innerHTML = openTabs.map(tabId => {
+    const note = notes.find(n => n.id === tabId);
+    if (!note) return '';
+    
+    const isActive = tabId === activeNoteId;
+    const firstLine = (note.content || '').split('\n')[0].trim();
+    const title = firstLine || 'New Note';
+    const displayTitle = title.length > 20 ? title.substring(0, 20) + '...' : title;
+    
+    return `
+      <div class="tab-item flex items-center gap-1 px-3 py-1.5 text-xs font-mono cursor-pointer transition-all border-b-2 ${
+        isActive 
+          ? 'text-zinc-900 dark:text-white border-blue-500 bg-white/50 dark:bg-zinc-800/50' 
+          : 'text-zinc-500 dark:text-zinc-500 border-transparent hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/30'
+      }" data-tab-id="${tabId}">
+        <span class="tab-title truncate max-w-[120px]">${ui._escapeHtml(displayTitle)}</span>
+        <button class="tab-close ml-1 p-0.5 rounded hover:bg-zinc-300/50 dark:hover:bg-zinc-700/50 transition-colors" data-close-tab="${tabId}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    `;
+  }).join('');
+  
+  // Add click handlers for tabs
+  ui.elements.tabBar.querySelectorAll('.tab-item').forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      // Don't switch tab if clicking close button
+      if (e.target.closest('.tab-close')) return;
+      const tabId = tab.dataset.tabId;
+      if (tabId && tabId !== activeNoteId) {
+        selectNote(tabId);
+      }
+    });
+  });
+  
+  // Add click handlers for close buttons
+  ui.elements.tabBar.querySelectorAll('.tab-close').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const tabId = btn.dataset.closeTab;
+      if (tabId) {
+        closeTab(tabId);
+      }
+    });
+  });
+  
+  // Add "new tab" button at the end
+  const newTabBtn = document.createElement('button');
+  newTabBtn.className = 'flex items-center justify-center w-8 h-8 ml-1 text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/30 rounded transition-colors';
+  newTabBtn.title = 'New Note (⌘J)';
+  newTabBtn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+  `;
+  newTabBtn.addEventListener('click', () => {
+    createNewNote();
+  });
+  ui.elements.tabBar.appendChild(newTabBtn);
 }
 
 function selectNote(id) {
@@ -127,6 +193,12 @@ function selectNote(id) {
   localStorage.setItem(ACTIVE_TAB_KEY, id);
   const notes = store.getNotes();
   const note = notes.find(n => n.id === id);
+  
+  // Set current note ID for theme saving
+  ui.setCurrentNoteId(id);
+  
+  // Load theme preference for this note
+  ui.initTheme(id);
   
   ui.updateEditor(note);
   renderTabs();
@@ -173,6 +245,14 @@ function setupEventListeners() {
       return;
     }
 
+    // Cmd+J -> New Note
+    if (isCmdOrCtrl && e.code === 'KeyJ') {
+      e.preventDefault();
+      e.stopPropagation();
+      createNewNote();
+      return;
+    }
+
 
     // Spotlight Navigation
     if (isSpotlightOpen) {
@@ -196,22 +276,6 @@ function setupEventListeners() {
         }
     }
   }, { capture: true });
-
-  // Top Bar - New Note Button
-  ui.elements.topBarNewNoteBtn.addEventListener('click', () => {
-    createNewNote();
-  });
-
-  // Top Bar - Search Button (open spotlight)
-  ui.elements.topBarSearchBtn.addEventListener('click', () => {
-    if (isSpotlightOpen) {
-      closeSpotlight();
-    } else {
-      openSpotlight();
-    }
-  });
-
-
 
   // Spotlight Input
   ui.elements.spotlightInput.addEventListener('input', () => {
@@ -287,30 +351,6 @@ function setupEventListeners() {
       // Update timestamp
       ui.updateTimestamp(Date.now());
       renderTabs();
-    }
-  });
-
-  // Tab Bar Click (hidden but still functional)
-  ui.elements.tabBar.addEventListener('click', (e) => {
-    // Check for close button
-    const closeBtn = e.target.closest('[data-action="close-tab"]');
-    if (closeBtn) {
-        e.stopPropagation();
-        closeTab(closeBtn.dataset.id);
-        return;
-    }
-
-    // Check for new tab button
-    const newTabBtn = e.target.closest('[data-action="new-tab"]');
-    if (newTabBtn) {
-        createNewNote();
-        return;
-    }
-
-    // Check for tab click
-    const tabEl = e.target.closest('[data-id]');
-    if (tabEl) {
-        selectNote(tabEl.dataset.id);
     }
   });
 }

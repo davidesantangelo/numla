@@ -71,10 +71,13 @@ prev + 20%                    → $ 720
 
 ### Organization & Interface
 
-- **Sidebar**: Manage multiple notes, search through them, and create new ones.
-- **Tabs**: Quickly switch between open notes.
-- **Mobile Ready**: Fully responsive design with a toggleable sidebar for on-the-go calculations.
-- **Spotlight**: Press `⌘ K` to instantly search and jump to any note.
+- **Tab System**: Open multiple notes as tabs for easy switching. Click the `+` button to create a new note.
+- **Spotlight Search**: Press `⌘K` to instantly search and jump to any note.
+- **New Note**: Press `⌘J` or click the `+` tab to create a new note.
+- **Per-Note Theme**: Each note remembers its own light/dark mode preference.
+- **Export**: Download any note as a `.txt` file.
+- **Mobile Ready**: Fully responsive design for on-the-go calculations.
+- **Bottom Bar**: Shows note title, timestamp, and quick actions (export, delete, theme toggle).
 
 ---
 
@@ -138,10 +141,22 @@ Price: $10    ← Labels are stripped automatically
 
 | Shortcut | Action                  |
 | -------- | ----------------------- |
+| `⌘ J`    | Create new note         |
 | `⌘ K`    | Search notes            |
 | `↑` `↓`  | Navigate search results |
 | `Enter`  | Open selected note      |
-| `Esc`    | Close search            |
+| `Esc`    | Close search / modal    |
+
+---
+
+## 🗂️ Tab System
+
+Work with multiple notes simultaneously using the tab bar:
+
+- **Open tabs**: Click on any note in search results to open it as a tab
+- **Switch tabs**: Click on a tab to switch to that note
+- **Close tabs**: Click the `×` on a tab to close it
+- **New tab**: Click the `+` button at the end of the tab bar (or press `⌘J`)
 
 ---
 
@@ -172,9 +187,9 @@ Query time in major cities and timezone codes:
 
 ## 🎨 Design Philosophy
 
-- **Minimal** — No buttons, no clutter. Just you and your calculations.
+- **Minimal** — No buttons cluttering your view. Just you and your calculations.
 - **Fast** — Results appear instantly as you type.
-- **Beautiful** — Dark mode by default. Light mode available.
+- **Beautiful** — Dark mode by default. Light mode available. Per-note theme memory.
 - **Private** — Everything stays in your browser. No accounts. No tracking.
 
 ---

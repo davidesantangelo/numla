@@ -7,3 +7,23 @@ body {
   margin: 0;
   overflow: hidden;
 }
+
+/* Make placeholder visible even with transparent text */
+#note-editor::placeholder {
+  color: #a1a1aa; /* zinc-400 */
+  opacity: 1;
+}
+
+.dark #note-editor::placeholder {
+  color: #52525b; /* zinc-600 */
+}
+
+/* Hide scrollbar for tab bar */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

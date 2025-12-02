@@ -38,10 +38,10 @@ export const ui = {
       confirmDeleteBtn: document.getElementById('confirm-delete-btn'),
       cancelDeleteBtn: document.getElementById('cancel-delete-btn'),
       noteTitleDisplay: document.getElementById('note-title-display'),
-      // Top Bar Elements
-      topBarNewNoteBtn: document.getElementById('top-bar-new-note-btn'),
-      topBarSearchBtn: document.getElementById('top-bar-search-btn'),
-      topBarThemeToggle: document.getElementById('top-bar-theme-toggle'),
+      // Bottom Bar Theme Toggle
+      themeToggleBtn: document.getElementById('theme-toggle-btn'),
+      // Tab Bar
+      tabBar: document.getElementById('tab-bar'),
     };
 
     this.initTheme();
@@ -70,8 +70,8 @@ export const ui = {
         this.hideDeleteModal();
     });
 
-    // Theme Toggle Event (Top Bar)
-    this.elements.topBarThemeToggle.addEventListener('click', () => this.toggleTheme());
+    // Theme Toggle Event (Bottom Bar)
+    this.elements.themeToggleBtn.addEventListener('click', () => this.toggleTheme());
 
     console.log('UI Initialized');
   },
@@ -279,21 +279,41 @@ price + tax`;
  },
 
 
- initTheme() {
-    const savedTheme = localStorage.getItem('numla-theme');
+ initTheme(noteId = null) {
+    let savedTheme;
+    if (noteId) {
+      // Try to get per-note theme first
+      savedTheme = localStorage.getItem(`numla-theme-${noteId}`);
+    }
+    // Fall back to global theme if no per-note theme
+    if (!savedTheme) {
+      savedTheme = localStorage.getItem('numla-theme');
+    }
     // Default to dark if not set, or if set to dark
     const isDark = savedTheme === 'light' ? false : true;
-    this.setTheme(isDark);
+    this.setTheme(isDark, noteId);
  },
 
- setTheme(isDark) {
+ currentNoteId: null,
+
+ setCurrentNoteId(noteId) {
+    this.currentNoteId = noteId;
+ },
+
+ setTheme(isDark, noteId = null) {
     console.log('Setting theme:', isDark ? 'dark' : 'light');
     if (isDark) {
         document.documentElement.classList.add('dark');
     } else {
         document.documentElement.classList.remove('dark');
     }
+    // Save global preference
     localStorage.setItem('numla-theme', isDark ? 'dark' : 'light');
+    // Save per-note preference if noteId provided
+    const id = noteId || this.currentNoteId;
+    if (id) {
+      localStorage.setItem(`numla-theme-${id}`, isDark ? 'dark' : 'light');
+    }
     this.updateThemeSwitch(isDark);
  },
 

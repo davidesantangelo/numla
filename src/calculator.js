@@ -702,7 +702,7 @@ export class Calculator {
         }
 
         // Apply purple color
-        return `<span class="text-blue-400 font-medium">${formatted}</span>`;
+        return `<span class="text-blue-600 dark:text-blue-400 font-medium">${formatted}</span>`;
     }
 
     _formatDate(date) {

@@ -121,9 +121,21 @@ export const store = {
   },
 
   _persist(notes) {
-    const payload = JSON.stringify(notes);
-    notesCache = notes;
-    cacheVersion = payload;
-    localStorage.setItem(STORAGE_KEY, payload);
+    try {
+      const payload = JSON.stringify(notes);
+      notesCache = notes;
+      cacheVersion = payload;
+      localStorage.setItem(STORAGE_KEY, payload);
+    } catch (e) {
+      // Handle localStorage quota exceeded or other storage errors
+      console.error('Failed to persist notes:', e);
+      // Try to remove oldest notes if quota exceeded
+      if (e.name === 'QuotaExceededError' && notes.length > 1) {
+        const sortedByDate = [...notes].sort((a, b) => a.updatedAt - b.updatedAt);
+        notes.splice(notes.indexOf(sortedByDate[0]), 1);
+        console.warn('Removed oldest note due to storage quota');
+        this._persist(notes);
+      }
+    }
   }
 };

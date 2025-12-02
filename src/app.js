@@ -137,6 +137,7 @@ function renderTabs() {
   
   const notes = store.getNotes();
   
+  // Clear previous content and event listeners by replacing innerHTML
   ui.elements.tabBar.innerHTML = openTabs.map(tabId => {
     const note = notes.find(n => n.id === tabId);
     if (!note) return '';
@@ -163,28 +164,8 @@ function renderTabs() {
     `;
   }).join('');
   
-  // Add click handlers for tabs
-  ui.elements.tabBar.querySelectorAll('.tab-item').forEach(tab => {
-    tab.addEventListener('click', (e) => {
-      // Don't switch tab if clicking close button
-      if (e.target.closest('.tab-close')) return;
-      const tabId = tab.dataset.tabId;
-      if (tabId && tabId !== activeNoteId) {
-        selectNote(tabId);
-      }
-    });
-  });
-  
-  // Add click handlers for close buttons
-  ui.elements.tabBar.querySelectorAll('.tab-close').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const tabId = btn.dataset.closeTab;
-      if (tabId) {
-        closeTab(tabId);
-      }
-    });
-  });
+  // Use event delegation on tabBar instead of individual listeners
+  // This prevents memory leaks from repeated listener additions
   
   // Add "new tab" button at the end
   const newTabBtn = document.createElement('button');
@@ -283,19 +264,6 @@ function flushPendingEditorWork() {
   persistNoteContent(activeNoteId, ui.elements.editor.value, Date.now());
 }
 
-function closeAllTabs() {
-  // Flush pending work first
-  flushPendingEditorWork();
-  
-  // Clear all tabs
-  openTabs = [];
-  activeNoteId = null;
-  saveTabs();
-  
-  // Create a new note to ensure there's always something open
-  createNewNote();
-}
-
 function deleteNoteFromManager(noteId) {
   // Delete the note from store
   store.deleteNote(noteId);
@@ -339,6 +307,31 @@ function deleteAllNotes() {
 
 
 function setupEventListeners() {
+  // Tab Bar Event Delegation (prevents memory leaks from repeated listener additions)
+  if (ui.elements.tabBar) {
+    ui.elements.tabBar.addEventListener('click', (e) => {
+      // Handle close button clicks
+      const closeBtn = e.target.closest('.tab-close');
+      if (closeBtn) {
+        e.stopPropagation();
+        const tabId = closeBtn.dataset.closeTab;
+        if (tabId) {
+          closeTab(tabId);
+        }
+        return;
+      }
+      
+      // Handle tab clicks
+      const tab = e.target.closest('.tab-item');
+      if (tab) {
+        const tabId = tab.dataset.tabId;
+        if (tabId && tabId !== activeNoteId) {
+          selectNote(tabId);
+        }
+      }
+    });
+  }
+
   // Global Shortcuts
   window.addEventListener('keydown', (e) => {
     const isCmdOrCtrl = e.metaKey || e.ctrlKey;

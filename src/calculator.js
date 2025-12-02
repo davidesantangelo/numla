@@ -149,9 +149,11 @@ initCSSUnits();
 initTemperatureUnits();
 
 async function configureCurrencies() {
-    if (currenciesConfigured) return;
+    // Check if already configured or in progress first
+    if (currenciesConfigured) return Promise.resolve();
     if (configurePromise) return configurePromise;
     
+    // Create the promise immediately to prevent race conditions
     configurePromise = (async () => {
         try {
             // Ensure USD base unit exists first

@@ -11,10 +11,10 @@ A minimal, beautiful calculator notepad for quick math, currency conversions, an
 ### Write naturally, get instant results
 
 ```
-Rent: $1,200
+Rent: $1.200
 Utilities: $150
 Groceries: $400
-sum                           → $1,750
+sum                           → $1.750
 ```
 
 ### Currency conversions with live rates
@@ -22,7 +22,7 @@ sum                           → $1,750
 ```
 $500 in EUR                   → € 460
 £200 + $100                   → £ 278.50
-$2k + 15%                     → $ 2,300
+$2k + 15%                     → $ 2.300
 ```
 
 ### Percentages made simple
@@ -31,7 +31,7 @@ $2k + 15%                     → $ 2,300
 20% of 150                    → 30
 15% off $80                   → $ 68
 $50 as a % of $200            → 25
-tip: 18% on $45               → $ 53.10
+tip: 18% on $45               → $ 53,10
 ```
 
 ### Time & timezone queries
@@ -45,8 +45,8 @@ time in Tokyo                 → 11:30 PM JST
 ### Date math
 
 ```
-next friday                   → 12/6/25
-today + 2 weeks               → 12/15/25
+next friday                   → 12/5/25
+today + 2 weeks               → 12/16/25
 christmas - 30 days           → 11/25/25
 ```
 

@@ -127,9 +127,26 @@ function initCSSUnits() {
     }
 }
 
+// Initialize Temperature units
+function initTemperatureUnits() {
+    try {
+        // Fahrenheit
+        if (!math.Unit.isValuelessUnit('fahrenheit')) {
+            math.createUnit('fahrenheit', { definition: '1 degF', aliases: ['Fahrenheit', 'degF', 'F'] });
+        }
+        // Celsius
+        if (!math.Unit.isValuelessUnit('celsius')) {
+            math.createUnit('celsius', { definition: '1 degC', aliases: ['Celsius', 'degC', 'C', 'centigrade'] });
+        }
+    } catch (e) {
+        console.warn('Failed to init temperature units:', e);
+    }
+}
+
 // Initialize basic currencies immediately
 initBasicCurrencies();
 initCSSUnits();
+initTemperatureUnits();
 
 async function configureCurrencies() {
     if (currenciesConfigured) return;
@@ -520,11 +537,11 @@ export class Calculator {
         // If left side is a number (not a unit), treat it as already being in that currency
         // "(5600 + 4%) in EUR" -> "(5600 + 4%) EUR" (attach currency unit)
         // "10 USD in EUR" -> "(10 USD to EUR)" (convert between currencies)
-        // We'll do this transformation after evaluation, not here
-        // For now, just uppercase the currency code
-        text = text.replace(/\s+in\s+([a-zA-Z_$]+)/gi, (match, unit) => {
-            return ` in ${unit.toUpperCase()}`;
-        });
+        // We used to uppercase here, but now we define currency aliases in lowercase too,
+        // so we can leave the unit as is to support case-sensitive units like 'celsius'.
+        // text = text.replace(/\s+in\s+([a-zA-Z_$]+)/gi, (match, unit) => {
+        //    return ` in ${unit.toUpperCase()}`;
+        // });
 
         // Natural language operators (order matters - longer phrases first)
         text = text.replace(/\s+multiplied\s+by\s+/gi, ' * ');
@@ -593,9 +610,83 @@ export class Calculator {
         return text;
     }
 
+
+    _preprocessHolidayKeywords(text) {
+        // Replace common holiday keywords with actual dates
+        const currentYear = new Date().getFullYear();
+        const lowerText = text.toLowerCase();
+        
+        const holidays = {
+            'christmas': `December 25, ${currentYear}`,
+            'xmas': `December 25, ${currentYear}`,
+            'new year': `January 1, ${currentYear + 1}`,
+            'new years': `January 1, ${currentYear + 1}`,
+            'halloween': `October 31, ${currentYear}`,
+            'thanksgiving': `November 28, ${currentYear}`, // Approximate, 4th Thursday of Nov
+            'easter': `April 20, ${currentYear}`, // Approximate
+        };
+        
+        for (const [keyword, replacement] of Object.entries(holidays)) {
+            // Use word boundary to avoid partial matches
+            const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+            if (regex.test(lowerText)) {
+                // Replace the keyword while preserving the rest of the expression
+                text = text.replace(regex, replacement);
+                break; // Only replace one keyword per call
+            }
+        }
+        
+        return text;
+    }
+
     _evaluateDate(text) {
         // Check for date math: "Date + Duration" or "Date - Duration" or just "Date"
         // We use chrono to parse the date part.
+        
+        // Preprocess holiday keywords first
+        text = this._preprocessHolidayKeywords(text);
+        
+        // Check for "UNIT until DATE" pattern (e.g., "days until christmas", "weeks until new year")
+        const untilMatch = text.match(/^(days?|weeks?|months?|hours?|minutes?)\s+(?:until|to|till|before)\s+(.+)$/i);
+        if (untilMatch) {
+            const unit = untilMatch[1].toLowerCase();
+            const dateText = untilMatch[2];
+            const targetDate = chrono.parseDate(dateText);
+            if (targetDate) {
+                const now = new Date();
+                const diffMs = targetDate.getTime() - now.getTime();
+                
+                // Convert to appropriate unit
+                let divisor;
+                switch (unit) {
+                    case 'day':
+                    case 'days':
+                        divisor = 1000 * 60 * 60 * 24;
+                        break;
+                    case 'week':
+                    case 'weeks':
+                        divisor = 1000 * 60 * 60 * 24 * 7;
+                        break;
+                    case 'month':
+                    case 'months':
+                        divisor = 1000 * 60 * 60 * 24 * 30; // Approximate
+                        break;
+                    case 'hour':
+                    case 'hours':
+                        divisor = 1000 * 60 * 60;
+                        break;
+                    case 'minute':
+                    case 'minutes':
+                        divisor = 1000 * 60;
+                        break;
+                    default:
+                        divisor = 1000 * 60 * 60 * 24; // Default to days
+                }
+                
+                const result = Math.ceil(diffMs / divisor);
+                return result; // Return as number (will be formatted nicely)
+            }
+        }
         
         // First, try to see if the whole string is a date (e.g. "next friday")
         const parsedDate = chrono.parseDate(text);
@@ -603,6 +694,11 @@ export class Calculator {
              // If it's just a date, return formatted date
              // But wait, "next friday + 2 weeks" might parse "next friday" as date and ignore "+ 2 weeks"
              // We need to check if there is a math operation.
+             // If no math operation is detected later, we should return this.
+             // But let's check for math operators first to be safe.
+             if (!/[+-]/.test(text)) {
+                 return parsedDate;
+             }
         }
 
         // Regex for Date +/- Duration
@@ -643,6 +739,7 @@ export class Calculator {
 
         return null;
     }
+
 
     _formatResult(result) {
         if (result === undefined || result === null || typeof result === 'function') {

@@ -203,6 +203,9 @@ function renderTabs() {
   
   // Also render sidebar items whenever tabs are rendered
   ui.renderSidebarItems(notes, activeNoteId);
+  
+  // Also render tab manager items (all notes) whenever tabs are rendered
+  ui.renderTabManagerItems(notes, activeNoteId);
 }
 
 function selectNote(id) {
@@ -278,6 +281,59 @@ function flushPendingEditorWork() {
   debouncedCalculate.cancel();
   debouncedSave.cancel();
   persistNoteContent(activeNoteId, ui.elements.editor.value, Date.now());
+}
+
+function closeAllTabs() {
+  // Flush pending work first
+  flushPendingEditorWork();
+  
+  // Clear all tabs
+  openTabs = [];
+  activeNoteId = null;
+  saveTabs();
+  
+  // Create a new note to ensure there's always something open
+  createNewNote();
+}
+
+function deleteNoteFromManager(noteId) {
+  // Delete the note from store
+  store.deleteNote(noteId);
+  
+  // Close the tab if it's open
+  const tabIndex = openTabs.indexOf(noteId);
+  if (tabIndex !== -1) {
+    openTabs.splice(tabIndex, 1);
+    saveTabs();
+  }
+  
+  // If we deleted the active note, switch to another one
+  if (activeNoteId === noteId) {
+    if (openTabs.length > 0) {
+      selectNote(openTabs[0]);
+    } else {
+      createNewNote();
+    }
+  } else {
+    renderTabs();
+  }
+}
+
+function deleteAllNotes() {
+  // Flush pending work first
+  flushPendingEditorWork();
+  
+  // Get all notes and delete them
+  const notes = store.getNotes();
+  notes.forEach(note => store.deleteNote(note.id));
+  
+  // Clear all tabs
+  openTabs = [];
+  activeNoteId = null;
+  saveTabs();
+  
+  // Create a new note to ensure there's always something open
+  createNewNote();
 }
 
 
@@ -415,6 +471,76 @@ function setupEventListeners() {
       ui.elements.sidebarNewBtn.addEventListener('click', () => {
           createNewNote();
           ui.toggleSidebar(false);
+      });
+  }
+
+  // Tab Manager List Click (select or delete note)
+  if (ui.elements.tabManagerList) {
+      ui.elements.tabManagerList.addEventListener('click', (e) => {
+          // Check if clicked on delete button (first step - show confirm/cancel)
+          const deleteBtn = e.target.closest('.tab-manager-delete');
+          if (deleteBtn) {
+              e.stopPropagation();
+              const container = deleteBtn.closest('.delete-note-container');
+              if (container) {
+                  // Hide delete button, show confirm/cancel buttons
+                  deleteBtn.classList.add('hidden');
+                  container.querySelector('.tab-manager-confirm-delete').classList.remove('hidden');
+                  container.querySelector('.tab-manager-cancel-delete').classList.remove('hidden');
+              }
+              return;
+          }
+          
+          // Check if clicked on confirm delete button
+          const confirmBtn = e.target.closest('.tab-manager-confirm-delete');
+          if (confirmBtn) {
+              e.stopPropagation();
+              const noteId = confirmBtn.dataset.confirmDelete;
+              if (noteId) {
+                  deleteNoteFromManager(noteId);
+              }
+              return;
+          }
+          
+          // Check if clicked on cancel delete button
+          const cancelBtn = e.target.closest('.tab-manager-cancel-delete');
+          if (cancelBtn) {
+              e.stopPropagation();
+              const container = cancelBtn.closest('.delete-note-container');
+              if (container) {
+                  // Hide confirm/cancel buttons, show delete button
+                  container.querySelector('.tab-manager-delete').classList.remove('hidden');
+                  container.querySelector('.tab-manager-confirm-delete').classList.add('hidden');
+                  container.querySelector('.tab-manager-cancel-delete').classList.add('hidden');
+              }
+              return;
+          }
+          
+          // Otherwise select the note
+          const el = e.target.closest('[data-id]');
+          if (el) {
+              openTab(el.dataset.id);
+              ui.toggleTabManager(false);
+          }
+      });
+  }
+
+  // Delete All Notes Button -> Show confirmation modal
+  if (ui.elements.deleteAllNotesBtn) {
+      ui.elements.deleteAllNotesBtn.addEventListener('click', () => {
+          const notes = store.getNotes();
+          if (notes.length > 0) {
+              ui.showCloseAllModal();
+          }
+      });
+  }
+
+  // Confirm Delete All Notes
+  if (ui.elements.confirmCloseAllBtn) {
+      ui.elements.confirmCloseAllBtn.addEventListener('click', () => {
+          deleteAllNotes();
+          ui.hideCloseAllModal();
+          ui.toggleTabManager(false);
       });
   }
 }

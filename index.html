@@ -69,9 +69,10 @@
       <div class="fixed top-0 left-0 right-0 z-40 h-12 bg-zinc-50 dark:bg-black flex items-center px-4 md:hidden">
         <button id="menu-btn" class="p-2 -ml-2 text-zinc-600 dark:text-zinc-400">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
           </svg>
         </button>
       </div>
@@ -108,8 +109,66 @@
 
       <!-- Tab Bar (Desktop only) -->
       <div class="hidden md:block fixed top-0 left-0 right-0 z-40 bg-zinc-100/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-zinc-200/50 dark:border-zinc-800/50">
-        <div id="tab-bar" class="flex items-center h-12 px-8 md:px-16 lg:px-24 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth">
-          <!-- Tabs injected here -->
+        <div class="flex items-center h-12 px-8 md:px-16 lg:px-24">
+          <!-- Tab Manager Button -->
+          <button id="tab-manager-btn" class="flex-shrink-0 flex items-center justify-center w-8 h-8 mr-2 text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/30 rounded-lg transition-colors" title="Manage Tabs">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+          </button>
+          <div id="tab-bar" class="flex-1 flex items-center h-12 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth">
+            <!-- Tabs injected here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Desktop Tab Manager Sidebar Overlay -->
+      <div id="tab-manager-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300"></div>
+
+      <!-- Desktop Tab Manager Sidebar -->
+      <div id="tab-manager-sidebar" class="fixed inset-y-0 left-0 w-80 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col shadow-2xl">
+        <div class="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+          <span class="font-mono font-bold text-lg text-zinc-900 dark:text-white">All Notes</span>
+          <button id="tab-manager-close-btn" class="p-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="p-4 border-b border-zinc-200 dark:border-zinc-800">
+          <button id="delete-all-notes-btn" class="w-full py-2 px-4 bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 rounded-lg font-mono text-sm font-medium flex items-center justify-center gap-2 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            Delete All Notes
+          </button>
+        </div>
+
+        <div id="tab-manager-list" class="flex-1 overflow-y-auto p-2 space-y-1">
+          <!-- Tab manager items injected here -->
+        </div>
+      </div>
+
+      <!-- Delete All Notes Confirmation Modal -->
+      <div id="close-all-modal-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] hidden opacity-0 transition-opacity duration-300"></div>
+      <div id="close-all-modal" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-2xl w-[90%] max-w-sm z-[70] hidden opacity-0 scale-95 transition-all duration-300 transform">
+        <h3 class="text-lg font-bold text-zinc-900 dark:text-white mb-2">Delete All Notes?</h3>
+        <p class="text-zinc-600 dark:text-zinc-400 text-sm mb-6">
+          This action cannot be undone. All your notes will be permanently deleted.
+        </p>
+        <div class="flex justify-end gap-3">
+          <button id="cancel-close-all-btn" class="px-4 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
+            Cancel
+          </button>
+          <button id="confirm-close-all-btn" class="px-4 py-2 text-sm font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 rounded-lg transition-colors">
+            Delete All
+          </button>
         </div>
       </div>
 
@@ -122,7 +181,7 @@
         <!-- Bottom Bar (Title + Date + Delete) -->
         <div
           id="bottom-bar"
-          class="absolute bottom-10 md:bottom-6 left-1/2 -translate-x-1/2 flex items-center justify-center gap-3 px-4 py-2 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 rounded-xl shadow-lg z-40 transition-all hover:bg-white/90 dark:hover:bg-zinc-900/90"
+          class="absolute bottom-12 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center justify-center gap-3 px-4 py-2 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 rounded-xl shadow-lg z-40 transition-all hover:bg-white/90 dark:hover:bg-zinc-900/90"
         >
           <span
             id="note-title-display"

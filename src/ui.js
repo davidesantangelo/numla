@@ -56,6 +56,18 @@ export const ui = {
       sidebarCloseBtn: document.getElementById('sidebar-close-btn'),
       sidebarNewBtn: document.getElementById('sidebar-new-btn'),
       sidebarList: document.getElementById('sidebar-list'),
+      // Tab Manager Sidebar Elements
+      tabManagerBtn: document.getElementById('tab-manager-btn'),
+      tabManagerSidebar: document.getElementById('tab-manager-sidebar'),
+      tabManagerOverlay: document.getElementById('tab-manager-overlay'),
+      tabManagerCloseBtn: document.getElementById('tab-manager-close-btn'),
+      tabManagerList: document.getElementById('tab-manager-list'),
+      deleteAllNotesBtn: document.getElementById('delete-all-notes-btn'),
+      // Delete All Notes Modal Elements
+      closeAllModalOverlay: document.getElementById('close-all-modal-overlay'),
+      closeAllModal: document.getElementById('close-all-modal'),
+      confirmCloseAllBtn: document.getElementById('confirm-close-all-btn'),
+      cancelCloseAllBtn: document.getElementById('cancel-close-all-btn'),
     };
 
     this.initTheme();
@@ -96,6 +108,22 @@ export const ui = {
     }
     if (this.elements.sidebarOverlay) {
         this.elements.sidebarOverlay.addEventListener('click', () => this.toggleSidebar(false));
+    }
+
+    // Tab Manager Sidebar Events
+    if (this.elements.tabManagerBtn) {
+        this.elements.tabManagerBtn.addEventListener('click', () => this.toggleTabManager(true));
+    }
+    if (this.elements.tabManagerCloseBtn) {
+        this.elements.tabManagerCloseBtn.addEventListener('click', () => this.toggleTabManager(false));
+    }
+    if (this.elements.tabManagerOverlay) {
+        this.elements.tabManagerOverlay.addEventListener('click', () => this.toggleTabManager(false));
+    }
+
+    // Close All Tabs Modal Events
+    if (this.elements.cancelCloseAllBtn) {
+        this.elements.cancelCloseAllBtn.addEventListener('click', () => this.hideCloseAllModal());
     }
 
     console.log('UI Initialized');
@@ -189,6 +217,113 @@ export const ui = {
               sidebar.classList.add('hidden');
           }, 300);
       }
+  },
+
+  toggleTabManager(show) {
+      const { tabManagerSidebar, tabManagerOverlay } = this.elements;
+      if (!tabManagerSidebar || !tabManagerOverlay) return;
+
+      if (show) {
+          tabManagerOverlay.classList.remove('hidden');
+          // Trigger reflow
+          void tabManagerSidebar.offsetWidth;
+          
+          tabManagerOverlay.classList.remove('opacity-0');
+          tabManagerSidebar.classList.remove('-translate-x-full');
+      } else {
+          tabManagerOverlay.classList.add('opacity-0');
+          tabManagerSidebar.classList.add('-translate-x-full');
+          
+          setTimeout(() => {
+              tabManagerOverlay.classList.add('hidden');
+          }, 300);
+      }
+  },
+
+  showCloseAllModal() {
+      const { closeAllModal, closeAllModalOverlay } = this.elements;
+      if (!closeAllModal || !closeAllModalOverlay) return;
+      
+      closeAllModal.classList.remove('hidden');
+      closeAllModalOverlay.classList.remove('hidden');
+      
+      // Trigger reflow
+      void closeAllModal.offsetWidth;
+      
+      closeAllModal.classList.remove('opacity-0', 'scale-95');
+      closeAllModalOverlay.classList.remove('opacity-0');
+  },
+
+  hideCloseAllModal() {
+      const { closeAllModal, closeAllModalOverlay } = this.elements;
+      if (!closeAllModal || !closeAllModalOverlay) return;
+      
+      closeAllModal.classList.add('opacity-0', 'scale-95');
+      closeAllModalOverlay.classList.add('opacity-0');
+      
+      setTimeout(() => {
+          closeAllModal.classList.add('hidden');
+          closeAllModalOverlay.classList.add('hidden');
+      }, 300);
+  },
+
+  renderTabManagerItems(notes, activeNoteId) {
+      if (!this.elements.tabManagerList) return;
+      
+      this.elements.tabManagerList.innerHTML = '';
+      
+      if (notes.length === 0) {
+          this.elements.tabManagerList.innerHTML = '<div class="p-4 text-center text-zinc-500 text-sm font-mono">No notes yet</div>';
+          return;
+      }
+
+      notes.forEach(note => {
+          const isActive = note.id === activeNoteId;
+          const content = note.content || '';
+          const firstLine = content.split('\n')[0].trim();
+          const title = firstLine || 'New Note';
+          const displayTitle = this._getDisplayTitle(title);
+          const date = this._formatSidebarDate(note.updatedAt || note.createdAt);
+
+          const el = document.createElement('div');
+          el.className = `p-3 mb-1 rounded-lg cursor-pointer flex justify-between items-center group transition-colors ${
+              isActive 
+                  ? 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-white font-medium' 
+                  : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 hover:text-zinc-900 dark:hover:text-zinc-200'
+          }`;
+          
+          el.innerHTML = `
+              <div class="flex flex-col overflow-hidden flex-1">
+                  <span class="font-mono text-sm truncate">${this._escapeHtml(displayTitle)}</span>
+                  <span class="text-[10px] font-mono opacity-60">${date}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                  ${isActive ? '<div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div>' : ''}
+                  <div class="delete-note-container flex items-center">
+                      <button class="tab-manager-delete p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors opacity-0 group-hover:opacity-100" data-delete-note="${note.id}" title="Delete Note">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                      </button>
+                      <button class="tab-manager-confirm-delete hidden p-1.5 text-green-500 hover:text-green-600 hover:bg-green-500/10 rounded transition-colors" data-confirm-delete="${note.id}" title="Confirm Delete">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                      </button>
+                      <button class="tab-manager-cancel-delete hidden p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-500/10 rounded transition-colors" data-cancel-delete="${note.id}" title="Cancel">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <line x1="18" y1="6" x2="6" y2="18"></line>
+                              <line x1="6" y1="6" x2="18" y2="18"></line>
+                          </svg>
+                      </button>
+                  </div>
+              </div>
+          `;
+          
+          el.dataset.id = note.id;
+          this.elements.tabManagerList.appendChild(el);
+      });
   },
 
   renderSidebarItems(notes, activeNoteId) {

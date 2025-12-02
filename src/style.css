@@ -33,3 +33,14 @@ body {
   caret-width: thin;
   caret-shape: bar;
 }
+
+/* Make text selection visible in the editor */
+#note-editor::selection {
+  background-color: rgba(59, 130, 246, 0.5); /* blue-500 with opacity */
+  color: #1e293b; /* slate-800 - visible text color when selected */
+}
+
+.dark #note-editor::selection {
+  background-color: rgba(96, 165, 250, 0.4); /* blue-400 with opacity */
+  color: #f1f5f9; /* slate-100 - visible text color when selected */
+}

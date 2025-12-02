@@ -159,19 +159,20 @@ export const ui = {
 
       // Yellow Comments Highlighting (# ...)
       // We use a regex to find lines starting with # and wrap them in a span
-      // Use amber-600 for light mode (readable) and yellow-400 for dark mode
-      html = html.replace(/^#(.*$)/gm, '<span class="text-amber-600 dark:text-yellow-400">#$1</span>');
+      // Use amber-500 for light mode and yellow-300 for dark mode - more visible
+      html = html.replace(/^#(.*$)/gm, '<span class="text-amber-500 dark:text-yellow-300 font-medium">#$1</span>');
       
       // Variable Assignment Highlighting (var = value or $var = value)
       // Match variable names (with or without $) followed by = and a value
-      // Use teal-600 for both modes - works well on both light and dark backgrounds
-      html = html.replace(/^(\$?[a-zA-Z_][a-zA-Z0-9_]*)\s*(=)/gm, '<span class="text-teal-600">$1</span> $2');
+      // Use teal-500 for light mode and teal-400 for dark - more saturated and visible
+      html = html.replace(/^(\$?[a-zA-Z_][a-zA-Z0-9_]*)\s*(=)/gm, '<span class="text-teal-500 dark:text-teal-400 font-semibold">$1</span> $2');
       
       // Currency Highlighting (Purple)
       // Highlight common currency codes (case insensitive)
+      // Use purple-500 for light mode and purple-300 for dark - more visible
       const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'SEK', 'NZD', 'KRW', 'SGD', 'NOK', 'MXN', 'INR', 'RUB', 'ZAR', 'TRY', 'BRL', 'TWD', 'DKK', 'PLN', 'THB', 'IDR', 'HUF', 'CZK', 'ILS', 'CLP', 'PHP', 'AED', 'COP', 'SAR', 'MYR', 'RON'];
       const currencyRegex = new RegExp(`\\b(${currencies.join('|')})\\b`, 'gi');
-      html = html.replace(currencyRegex, '<span class="text-purple-400">$1</span>');
+      html = html.replace(currencyRegex, '<span class="text-purple-500 dark:text-purple-300 font-medium">$1</span>');
       
       // Handle trailing newline
       if (text.endsWith('\n')) {

@@ -122,7 +122,7 @@
       </div>
 
       <!-- Tab Bar (Desktop only) -->
-      <div class="hidden md:block fixed top-0 left-0 right-0 z-40 bg-zinc-100/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-zinc-200/50 dark:border-zinc-800/50">
+      <div class="hidden md:block fixed top-0 left-0 right-0 z-40 bg-zinc-50 dark:bg-black border-b border-zinc-200/50 dark:border-zinc-800/50">
         <div class="flex items-center h-14 px-8 md:px-16 lg:px-24">
           <!-- Tab Manager Button -->
           <button id="tab-manager-btn" class="flex-shrink-0 flex items-center justify-center w-8 h-8 mr-2 text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/30 rounded-lg transition-colors" title="Manage Tabs">
@@ -137,10 +137,10 @@
             <!-- Tabs injected here -->
           </div>
           <!-- Desktop Controls (right side of tab bar) -->
-          <div class="flex items-center gap-1 ml-4 flex-shrink-0 px-3 py-1 my-2 bg-white/60 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/80 rounded-lg backdrop-blur-sm">
+          <div class="flex items-center gap-1 ml-4 flex-shrink-0 px-3 py-1 my-2 bg-zinc-50 dark:bg-black border border-zinc-200/50 dark:border-zinc-800/50 rounded-lg">
             <span
               id="timestamp-display"
-              class="text-xs font-mono text-zinc-500 dark:text-zinc-500 whitespace-nowrap mr-2"
+              class="text-xs font-mono text-zinc-700 dark:text-zinc-300 whitespace-nowrap mr-2"
             >Dec 1, 2025 00:00:00</span>
             <button
               id="export-btn"
@@ -436,6 +436,32 @@ price + tax"
           id="delete-modal-overlay"
           class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] hidden opacity-0 transition-opacity duration-300"
         ></div>
+
+        <!-- Statistics Panel (Bottom Right) -->
+        <div
+          id="stats-panel"
+          class="hidden md:flex fixed bottom-4 right-4 lg:right-8 items-center gap-4 px-4 py-2 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 rounded-lg text-xs font-mono text-zinc-500 dark:text-zinc-500 z-30"
+        >
+          <div class="flex items-center gap-1.5" title="Total lines in document">
+            <span class="text-zinc-400 dark:text-zinc-600">Lines</span>
+            <span id="stat-lines" class="text-zinc-700 dark:text-zinc-300">0</span>
+          </div>
+          <div class="w-px h-3 bg-zinc-300 dark:bg-zinc-700"></div>
+          <div class="flex items-center gap-1.5" title="Lines with calculated results">
+            <span class="text-zinc-400 dark:text-zinc-600">Calc</span>
+            <span id="stat-calculations" class="text-zinc-700 dark:text-zinc-300">0</span>
+          </div>
+          <div class="w-px h-3 bg-zinc-300 dark:bg-zinc-700"></div>
+          <div class="flex items-center gap-1.5" title="Variables defined (e.g. tax = 22%)">
+            <span class="text-zinc-400 dark:text-zinc-600">Vars</span>
+            <span id="stat-variables" class="text-zinc-700 dark:text-zinc-300">0</span>
+          </div>
+          <div class="w-px h-3 bg-zinc-300 dark:bg-zinc-700"></div>
+          <div class="flex items-center gap-1.5" title="Sum of all numeric results">
+            <span class="text-blue-500 dark:text-blue-400">Total</span>
+            <span id="stat-total" class="text-blue-600 dark:text-blue-400 font-medium">0</span>
+          </div>
+        </div>
 
         <!-- Focus Mode Exit Hint -->
         <div class="focus-mode-hint">Press ESC to exit focus mode</div>

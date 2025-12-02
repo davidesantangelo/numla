@@ -82,6 +82,12 @@ export const ui = {
       // Focus Mode Elements
       focusModeBtn: document.getElementById('focus-mode-btn'),
       focusModeBtnMobile: document.getElementById('focus-mode-btn-mobile'),
+      // Statistics Panel Elements
+      statsPanel: document.getElementById('stats-panel'),
+      statLines: document.getElementById('stat-lines'),
+      statCalculations: document.getElementById('stat-calculations'),
+      statVariables: document.getElementById('stat-variables'),
+      statTotal: document.getElementById('stat-total'),
     };
 
     this.initTheme();
@@ -633,11 +639,55 @@ price + tax`;
       this.lastCalculatedText = text;
       this.lastResults = results;
       this.renderResults(results);
+      this.updateStats(text, results);
       return results;
   },
 
   renderResults(results) {
       this.elements.resultsDisplay.innerHTML = results.map(r => `<div>${r || '&nbsp;'}</div>`).join('');
+  },
+
+  updateStats(text, results) {
+      if (!this.elements.statLines) return;
+      
+      const lines = text.split('\n');
+      const lineCount = lines.length;
+      
+      // Count calculations (lines with non-empty results)
+      let calcCount = 0;
+      let total = 0;
+      
+      results.forEach((result, index) => {
+          if (result && result.trim() !== '') {
+              calcCount++;
+              // Try to extract numeric value for total
+              const numMatch = result.replace(/[^0-9.-]/g, '');
+              const num = parseFloat(numMatch);
+              if (!isNaN(num) && isFinite(num)) {
+                  total += num;
+              }
+          }
+      });
+      
+      // Count variables (lines with = that are assignments)
+      const varCount = lines.filter(line => {
+          const trimmed = line.trim();
+          return /^[\$]?[a-zA-Z_][a-zA-Z0-9_]*\s*=/.test(trimmed);
+      }).length;
+      
+      // Update UI
+      this.elements.statLines.textContent = lineCount;
+      this.elements.statCalculations.textContent = calcCount;
+      this.elements.statVariables.textContent = varCount;
+      
+      // Format total nicely
+      if (Math.abs(total) >= 1000000) {
+          this.elements.statTotal.textContent = total.toExponential(2);
+      } else if (Math.abs(total) >= 1000) {
+          this.elements.statTotal.textContent = total.toLocaleString(undefined, { maximumFractionDigits: 2 });
+      } else {
+          this.elements.statTotal.textContent = total.toLocaleString(undefined, { maximumFractionDigits: 4 });
+      }
   },
 
   _escapeHtml(unsafe) {

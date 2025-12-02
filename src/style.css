@@ -47,7 +47,8 @@ body {
 
 /* Focus Mode - Hide all controls but keep results */
 .focus-mode .fixed.top-0,
-.focus-mode #mobile-bottom-bar {
+.focus-mode #mobile-bottom-bar,
+.focus-mode #stats-panel {
   opacity: 0 !important;
   pointer-events: none !important;
   transition: opacity 0.3s ease;

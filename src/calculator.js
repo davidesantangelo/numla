@@ -777,11 +777,19 @@ export class Calculator {
             if (!isFinite(result)) {
                 return result === Infinity ? '∞' : result === -Infinity ? '-∞' : '';
             }
-            formatted = new Intl.NumberFormat('it-IT', { 
+            // Format the number with separators first
+            const fullFormatted = new Intl.NumberFormat('it-IT', { 
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 2,
                 useGrouping: true 
             }).format(result);
+            
+            // If too long (more than ~15 chars), use scientific notation
+            if (fullFormatted.length > 15) {
+                formatted = result.toExponential(2);
+            } else {
+                formatted = fullFormatted;
+            }
         } else if (result && result.isUnit) {
             // Check if it's a currency unit
             const unitName = result.units[0]?.unit?.name;

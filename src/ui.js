@@ -637,7 +637,58 @@ price + tax`;
   },
 
   renderResults(results) {
-      this.elements.resultsDisplay.innerHTML = results.map(r => `<div>${r || '&nbsp;'}</div>`).join('');
+      this.elements.resultsDisplay.innerHTML = results.map((r, index) => {
+          if (!r || r.trim() === '' || r === '&nbsp;') {
+              return '<div>&nbsp;</div>';
+          }
+          // Extract plain text value from the HTML span
+          const plainValue = r.replace(/<[^>]*>/g, '').trim();
+          // Wrap the result span in a clickable container with beautiful styling
+          const clickableResult = r.replace(
+              /<span class="([^"]*)">/,
+              `<span class="$1 result-item cursor-pointer rounded-md px-2.5 py-1 -my-0.5 inline-block transition-all duration-200 ease-out hover:bg-zinc-200/60 dark:hover:bg-zinc-700/50 hover:shadow-sm active:scale-95" data-value="${this._escapeHtml(plainValue)}" title="Click to copy">`
+          );
+          return `<div>${clickableResult}</div>`;
+      }).join('');
+      
+      // Add click handlers for copying
+      this.elements.resultsDisplay.querySelectorAll('.result-item').forEach(item => {
+          item.addEventListener('click', (e) => this._copyResult(e.currentTarget));
+      });
+  },
+
+  async _copyResult(element) {
+      const value = element.dataset.value;
+      if (!value) return;
+      
+      try {
+          await navigator.clipboard.writeText(value);
+          
+          // Store original state
+          const originalText = element.textContent;
+          const originalClasses = element.className;
+          
+          // Beautiful animated feedback
+          element.style.transform = 'scale(1.1)';
+          element.classList.add('!bg-emerald-500/25', 'dark:!bg-emerald-400/25');
+          
+          // Change to checkmark with animation
+          setTimeout(() => {
+              element.innerHTML = '<span class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>Copied</span>';
+              element.classList.remove('!bg-emerald-500/25', 'dark:!bg-emerald-400/25');
+              element.classList.add('!text-emerald-500', 'dark:!text-emerald-400', '!bg-emerald-500/15', 'dark:!bg-emerald-400/15');
+              element.style.transform = 'scale(1)';
+          }, 100);
+          
+          // Restore original after delay
+          setTimeout(() => {
+              element.style.transform = '';
+              element.textContent = originalText;
+              element.className = originalClasses;
+          }, 1200);
+      } catch (err) {
+          console.error('Failed to copy:', err);
+      }
   },
 
   updateStats(text, results) {

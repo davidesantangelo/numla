@@ -96,3 +96,18 @@ body {
   0% { opacity: 1; }
   100% { opacity: 0; }
 }
+
+/* Result item copy animation */
+.result-item {
+  transform-origin: right center;
+}
+
+@keyframes copyPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.result-item:active {
+  animation: copyPulse 0.15s ease-out;
+}

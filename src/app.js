@@ -133,13 +133,13 @@ function renderTabs() {
     const displayTitle = title.length > 20 ? title.substring(0, 20) + '...' : title;
     
     return `
-      <div class="tab-item flex items-center gap-1 px-3 py-1.5 text-xs font-mono cursor-pointer transition-all border-b-2 ${
+      <div class="tab-item flex-shrink-0 snap-start flex items-center gap-2 px-6 h-full text-sm font-mono cursor-pointer transition-all ${
         isActive 
-          ? 'text-zinc-900 dark:text-white border-blue-500 bg-white/50 dark:bg-zinc-800/50' 
-          : 'text-zinc-500 dark:text-zinc-500 border-transparent hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/30'
+          ? 'text-zinc-900 dark:text-white bg-white dark:bg-black shadow-sm border-t border-x border-zinc-200/50 dark:border-zinc-800/50' 
+          : 'text-zinc-500 dark:text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 hover:bg-zinc-200 dark:hover:bg-zinc-800 border-t border-x border-transparent'
       }" data-tab-id="${tabId}">
-        <span class="tab-title truncate max-w-[120px]">${ui._escapeHtml(displayTitle)}</span>
-        <button class="tab-close ml-1 p-0.5 rounded hover:bg-zinc-300/50 dark:hover:bg-zinc-700/50 transition-colors" data-close-tab="${tabId}">
+        <span class="tab-title truncate max-w-[200px]">${ui._escapeHtml(displayTitle)}</span>
+        <button class="tab-close ml-1 p-0.5 hover:bg-zinc-300/50 dark:hover:bg-zinc-700/50 transition-colors" data-close-tab="${tabId}">
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -174,7 +174,7 @@ function renderTabs() {
   
   // Add "new tab" button at the end
   const newTabBtn = document.createElement('button');
-  newTabBtn.className = 'flex items-center justify-center w-8 h-8 ml-1 text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/30 rounded transition-colors';
+  newTabBtn.className = 'flex-shrink-0 snap-start flex items-center justify-center w-12 h-12 text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/30 transition-colors';
   newTabBtn.title = 'New Note (⌘J)';
   newTabBtn.innerHTML = `
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -186,6 +186,9 @@ function renderTabs() {
     createNewNote();
   });
   ui.elements.tabBar.appendChild(newTabBtn);
+  
+  // Also render sidebar items whenever tabs are rendered
+  ui.renderSidebarItems(notes, activeNoteId);
 }
 
 function selectNote(id) {
@@ -205,6 +208,17 @@ function selectNote(id) {
   
   // Always focus the editor
   ui.elements.editor.focus();
+  
+  // Close sidebar on mobile when selecting a note
+  ui.toggleSidebar(false);
+
+  // Scroll active tab into view
+  setTimeout(() => {
+    const activeTab = ui.elements.tabBar.querySelector(`[data-tab-id="${id}"]`);
+    if (activeTab) {
+      activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }, 10);
 }
 
 function createNewNote() {
@@ -353,4 +367,22 @@ function setupEventListeners() {
       renderTabs();
     }
   });
+
+  // Sidebar List Click
+  if (ui.elements.sidebarList) {
+      ui.elements.sidebarList.addEventListener('click', (e) => {
+          const el = e.target.closest('[data-id]');
+          if (el) {
+              openTab(el.dataset.id);
+          }
+      });
+  }
+
+  // Sidebar New Note Button
+  if (ui.elements.sidebarNewBtn) {
+      ui.elements.sidebarNewBtn.addEventListener('click', () => {
+          createNewNote();
+          ui.toggleSidebar(false);
+      });
+  }
 }

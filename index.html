@@ -65,9 +65,50 @@
 
       <!-- Top Bar removed - use Cmd+N for new note, Cmd+K for search -->
 
-      <!-- Tab Bar -->
-      <div class="fixed top-0 left-0 right-0 z-40 bg-zinc-100/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-zinc-200/50 dark:border-zinc-800/50">
-        <div id="tab-bar" class="flex items-center h-10 px-2 overflow-x-auto no-scrollbar">
+      <!-- Mobile Header & Menu Button -->
+      <div class="fixed top-0 left-0 right-0 z-40 h-12 bg-zinc-50 dark:bg-black flex items-center px-4 md:hidden">
+        <button id="menu-btn" class="p-2 -ml-2 text-zinc-600 dark:text-zinc-400">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Mobile Sidebar Overlay -->
+      <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300 md:hidden"></div>
+
+      <!-- Mobile Sidebar -->
+      <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out md:hidden flex flex-col">
+        <div class="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+          <span class="font-mono font-bold text-lg text-zinc-900 dark:text-white">Notes</span>
+          <button id="sidebar-close-btn" class="p-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="p-4">
+            <button id="sidebar-new-btn" class="w-full py-2 px-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg font-mono text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                New Note
+            </button>
+        </div>
+
+        <div id="sidebar-list" class="flex-1 overflow-y-auto p-2 space-y-1">
+          <!-- Sidebar items injected here -->
+        </div>
+      </div>
+
+      <!-- Tab Bar (Desktop only) -->
+      <div class="hidden md:block fixed top-0 left-0 right-0 z-40 bg-zinc-100/90 dark:bg-zinc-900/90 backdrop-blur-md border-b border-zinc-200/50 dark:border-zinc-800/50">
+        <div id="tab-bar" class="flex items-center h-12 px-8 md:px-16 lg:px-24 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth">
           <!-- Tabs injected here -->
         </div>
       </div>
@@ -75,7 +116,7 @@
       <!-- Main Editor -->
       <main
         id="main-content"
-        class="flex-1 flex flex-col h-full pt-10 bg-zinc-50 dark:bg-black relative transition-all duration-300 ease-out"
+        class="flex-1 flex flex-col h-full pt-14 bg-zinc-50 dark:bg-black relative transition-all duration-300 ease-out"
       >
 
         <!-- Bottom Bar (Title + Date + Delete) -->
@@ -87,10 +128,10 @@
             id="note-title-display"
             class="text-sm font-mono text-zinc-600 dark:text-zinc-400 truncate max-w-[120px] md:max-w-[180px]"
           >New Note</span>
-          <div class="w-px h-4 bg-zinc-300 dark:bg-zinc-700"></div>
+          <div class="w-px h-4 bg-zinc-300 dark:bg-zinc-700 hidden md:block"></div>
           <span
             id="timestamp-display"
-            class="text-xs font-mono text-zinc-500 dark:text-zinc-500"
+            class="text-xs font-mono text-zinc-500 dark:text-zinc-500 hidden md:block"
           >Dec 1, 2025 00:00:00</span>
           <div class="w-px h-4 bg-zinc-300 dark:bg-zinc-700"></div>
           <button
@@ -161,21 +202,21 @@
             </svg>
           </button>
         </div>
-        <div class="flex-1 relative flex flex-row overflow-hidden mx-8 md:mx-16 lg:mx-24 my-6">
+        <div class="flex-1 relative flex flex-row overflow-hidden my-6">
           <div
             class="flex-1 relative font-mono text-lg md:text-xl leading-relaxed"
           >
             <!-- Highlighter Backdrop -->
             <div
               id="highlighter"
-              class="absolute inset-0 w-full h-full px-8 pt-16 pb-8 md:px-12 md:pt-20 md:pb-12 whitespace-pre-wrap break-words overflow-hidden pointer-events-none text-zinc-800 dark:text-gray-300 bg-transparent z-0"
+              class="absolute inset-0 w-full h-full pl-8 pr-8 pt-16 pb-8 md:pl-16 md:pr-16 md:pt-20 md:pb-12 lg:pl-24 lg:pr-24 whitespace-pre-wrap break-words overflow-hidden pointer-events-none text-zinc-800 dark:text-gray-300 bg-transparent z-0"
               aria-hidden="true"
             ></div>
 
             <!-- Actual Editor -->
             <textarea
               id="note-editor"
-              class="absolute inset-0 w-full h-full px-8 pt-16 pb-8 md:px-12 md:pt-20 md:pb-12 resize-none focus:outline-none text-transparent caret-zinc-900 dark:caret-white bg-transparent overflow-y-scroll no-scrollbar z-10"
+              class="absolute inset-0 w-full h-full pl-8 pr-8 pt-16 pb-8 md:pl-16 md:pr-16 md:pt-20 md:pb-12 lg:pl-24 lg:pr-24 resize-none focus:outline-none text-transparent caret-zinc-900 dark:caret-white bg-transparent overflow-y-scroll no-scrollbar z-10"
               placeholder="Start typing your calculation...
 
 Examples:
@@ -191,7 +232,7 @@ price + tax"
           <div class="w-[25%] md:w-[15%] relative">
             <div
               id="results-display"
-              class="w-full h-full px-4 pt-16 pb-8 md:px-6 md:pt-20 md:pb-12 text-sm md:text-lg lg:text-xl leading-relaxed text-blue-600 dark:text-blue-400 font-mono text-right overflow-y-auto select-none pointer-events-none"
+              class="w-full h-full pl-4 pr-8 pt-16 pb-8 md:pl-6 md:pr-16 md:pt-20 md:pb-12 lg:pr-24 text-sm md:text-lg lg:text-xl leading-relaxed text-blue-600 dark:text-blue-400 font-mono text-right overflow-y-auto select-none pointer-events-none"
             >
               <!-- Results injected here -->
             </div>

@@ -42,6 +42,13 @@ export const ui = {
       themeToggleBtn: document.getElementById('theme-toggle-btn'),
       // Tab Bar
       tabBar: document.getElementById('tab-bar'),
+      // Sidebar Elements
+      menuBtn: document.getElementById('menu-btn'),
+      sidebar: document.getElementById('sidebar'),
+      sidebarOverlay: document.getElementById('sidebar-overlay'),
+      sidebarCloseBtn: document.getElementById('sidebar-close-btn'),
+      sidebarNewBtn: document.getElementById('sidebar-new-btn'),
+      sidebarList: document.getElementById('sidebar-list'),
     };
 
     this.initTheme();
@@ -72,6 +79,17 @@ export const ui = {
 
     // Theme Toggle Event (Bottom Bar)
     this.elements.themeToggleBtn.addEventListener('click', () => this.toggleTheme());
+
+    // Sidebar Events
+    if (this.elements.menuBtn) {
+        this.elements.menuBtn.addEventListener('click', () => this.toggleSidebar(true));
+    }
+    if (this.elements.sidebarCloseBtn) {
+        this.elements.sidebarCloseBtn.addEventListener('click', () => this.toggleSidebar(false));
+    }
+    if (this.elements.sidebarOverlay) {
+        this.elements.sidebarOverlay.addEventListener('click', () => this.toggleSidebar(false));
+    }
 
     console.log('UI Initialized');
   },
@@ -141,6 +159,66 @@ export const ui = {
         this.elements.spotlightOverlay.classList.add('hidden');
         this.elements.editor.focus();
     }
+  },
+
+  toggleSidebar(show) {
+      const { sidebar, sidebarOverlay } = this.elements;
+      if (!sidebar || !sidebarOverlay) return;
+
+      if (show) {
+          sidebarOverlay.classList.remove('hidden');
+          sidebar.classList.remove('hidden');
+          // Trigger reflow
+          void sidebar.offsetWidth;
+          
+          sidebarOverlay.classList.remove('opacity-0');
+          sidebar.classList.remove('-translate-x-full');
+      } else {
+          sidebarOverlay.classList.add('opacity-0');
+          sidebar.classList.add('-translate-x-full');
+          
+          setTimeout(() => {
+              sidebarOverlay.classList.add('hidden');
+              sidebar.classList.add('hidden');
+          }, 300);
+      }
+  },
+
+  renderSidebarItems(notes, activeNoteId) {
+      if (!this.elements.sidebarList) return;
+      
+      this.elements.sidebarList.innerHTML = '';
+      
+      if (notes.length === 0) {
+          this.elements.sidebarList.innerHTML = '<div class="p-4 text-center text-zinc-500 text-sm font-mono">No notes yet</div>';
+          return;
+      }
+
+      notes.forEach(note => {
+          const isActive = note.id === activeNoteId;
+          const content = note.content || '';
+          const firstLine = content.split('\n')[0].trim();
+          const title = firstLine || 'New Note';
+          const date = new Date(note.updatedAt || note.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+
+          const el = document.createElement('div');
+          el.className = `p-3 mb-1 rounded-lg cursor-pointer flex justify-between items-center transition-colors ${
+              isActive 
+                  ? 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-white font-medium' 
+                  : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 hover:text-zinc-900 dark:hover:text-zinc-200'
+          }`;
+          
+          el.innerHTML = `
+              <div class="flex flex-col overflow-hidden">
+                  <span class="font-mono text-sm truncate">${this._escapeHtml(title)}</span>
+                  <span class="text-[10px] font-mono opacity-60">${date}</span>
+              </div>
+              ${isActive ? '<div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div>' : ''}
+          `;
+          
+          el.dataset.id = note.id;
+          this.elements.sidebarList.appendChild(el);
+      });
   },
 
 

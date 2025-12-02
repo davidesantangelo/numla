@@ -6,7 +6,7 @@ A minimal, beautiful calculator notepad for quick math, currency conversions, an
 
 ---
 
-## ✨ Features
+## Features
 
 ### Write naturally, get instant results
 
@@ -81,7 +81,7 @@ prev + 20%                    → $ 720
 
 ---
 
-## 🧮 Full Reference
+## Full Reference
 
 ### Operators
 
@@ -137,7 +137,7 @@ Price: $10    ← Labels are stripped automatically
 
 ---
 
-## ⌨️ Keyboard Shortcuts
+## Keyboard Shortcuts
 
 | Shortcut | Action                  |
 | -------- | ----------------------- |
@@ -149,7 +149,7 @@ Price: $10    ← Labels are stripped automatically
 
 ---
 
-## 🗂️ Tab System
+## Tab System
 
 Work with multiple notes simultaneously using the tab bar:
 
@@ -160,7 +160,7 @@ Work with multiple notes simultaneously using the tab bar:
 
 ---
 
-## 🌍 Supported Currencies
+## Supported Currencies
 
 50+ currencies with live exchange rates updated multiple times daily:
 
@@ -172,7 +172,7 @@ Work with multiple notes simultaneously using the tab bar:
 
 ---
 
-## 🕐 Timezones
+## Timezones
 
 Query time in major cities and timezone codes:
 
@@ -185,7 +185,7 @@ Query time in major cities and timezone codes:
 
 ---
 
-## 🎨 Design Philosophy
+## Design Philosophy
 
 - **Minimal** — No buttons cluttering your view. Just you and your calculations.
 - **Fast** — Results appear instantly as you type.
@@ -194,7 +194,7 @@ Query time in major cities and timezone codes:
 
 ---
 
-## 🛠️ Development
+## Development
 
 ```bash
 # Install dependencies
@@ -212,7 +212,7 @@ npm run build
 
 ---
 
-## 📄 License
+## License
 
 MIT
 

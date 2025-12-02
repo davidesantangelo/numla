@@ -82,12 +82,6 @@ export const ui = {
       // Focus Mode Elements
       focusModeBtn: document.getElementById('focus-mode-btn'),
       focusModeBtnMobile: document.getElementById('focus-mode-btn-mobile'),
-      // Statistics Panel Elements
-      statsPanel: document.getElementById('stats-panel'),
-      statLines: document.getElementById('stat-lines'),
-      statCalculations: document.getElementById('stat-calculations'),
-      statVariables: document.getElementById('stat-variables'),
-      statTotal: document.getElementById('stat-total'),
     };
 
     this.initTheme();
@@ -639,7 +633,6 @@ price + tax`;
       this.lastCalculatedText = text;
       this.lastResults = results;
       this.renderResults(results);
-      this.updateStats(text, results);
       return results;
   },
 

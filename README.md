@@ -76,7 +76,6 @@ prev + 20%                    → $ 720
 - **New Note**: Press `⌘J` or click the `+` tab to create a new note.
 - **Tab Manager**: Click the grid icon to open the sidebar with all your notes. Search, switch, or delete notes easily.
 - **Focus Mode**: Hide all controls for distraction-free writing. Press `Esc` to exit.
-- **Statistics Panel**: Real-time stats showing lines, calculations, variables, and running total.
 - **Per-Note Theme**: Each note remembers its own light/dark mode preference.
 - **Export**: Download any note as a `.txt` file.
 - **Mobile Ready**: Fully responsive design for on-the-go calculations.
@@ -159,19 +158,6 @@ Enter distraction-free mode by clicking the expand icon in the controls bar:
 - **Hides all controls**: Tab bar, buttons, and panels disappear
 - **Results visible**: Calculation results remain visible
 - **Exit anytime**: Press `Esc` to return to normal view
-
----
-
-## Statistics Panel
-
-A real-time statistics panel in the bottom-right corner shows:
-
-| Stat   | Description                                    |
-| ------ | ---------------------------------------------- |
-| Lines  | Total number of lines in the document          |
-| Calc   | Lines with calculated results                  |
-| Vars   | Number of variable assignments (e.g., `x = 5`) |
-| Total  | Running sum of all numeric results             |
 
 ---
 

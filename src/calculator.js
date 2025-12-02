@@ -301,23 +301,26 @@ export class Calculator {
             // Clean up trailing result " = ..."
             trimmed = this._removeTrailingResult(trimmed);
 
-            // Try Date Math first
-            const dateResult = this._evaluateDate(trimmed);
-            if (dateResult !== null) {
-                results.push(this._formatResult(dateResult));
-                return;
+            // Check for format modifiers BEFORE date parsing (in hex, in bin, in oct, in sci)
+            // This prevents "64 in oct" being interpreted as a date (64 in October)
+            let outputFormat = null;
+            const formatMatch = trimmed.match(/\s+in\s+(hex|bin|oct|sci|scientific|binary|octal|hexadecimal)\s*$/i);
+            if (formatMatch) {
+                outputFormat = formatMatch[1].toLowerCase();
+                trimmed = trimmed.replace(/\s+in\s+(hex|bin|oct|sci|scientific|binary|octal|hexadecimal)\s*$/i, '');
+            }
+
+            // Try Date Math only if not a format conversion
+            if (!outputFormat) {
+                const dateResult = this._evaluateDate(trimmed);
+                if (dateResult !== null) {
+                    results.push(this._formatResult(dateResult));
+                    return;
+                }
             }
 
             // Preprocess for Natural Language Math
             let processed = this._preprocess(trimmed);
-
-            // Check for format modifiers (in hex, in bin, in oct, in sci)
-            let outputFormat = null;
-            const formatMatch = processed.match(/\s+in\s+(hex|bin|oct|sci|scientific|binary|octal|hexadecimal)\s*$/i);
-            if (formatMatch) {
-                outputFormat = formatMatch[1].toLowerCase();
-                processed = processed.replace(/\s+in\s+(hex|bin|oct|sci|scientific|binary|octal|hexadecimal)\s*$/i, '');
-            }
 
             try {
                 // Replace unicode math symbols with standard operators

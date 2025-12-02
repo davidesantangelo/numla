@@ -343,6 +343,15 @@ function setupEventListeners() {
   window.addEventListener('keydown', (e) => {
     const isCmdOrCtrl = e.metaKey || e.ctrlKey;
 
+    // ESC -> Exit Focus Mode (if in focus mode and spotlight is not open)
+    if (e.code === 'Escape' && !isSpotlightOpen) {
+      if (document.body.classList.contains('focus-mode')) {
+        e.preventDefault();
+        ui.exitFocusMode();
+        return;
+      }
+    }
+
     // Cmd+K -> Toggle Spotlight (Search)
     if (isCmdOrCtrl && e.code === 'KeyK') {
       e.preventDefault();

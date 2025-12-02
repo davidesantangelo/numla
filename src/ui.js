@@ -79,6 +79,9 @@ export const ui = {
       closeAllModal: document.getElementById('close-all-modal'),
       confirmCloseAllBtn: document.getElementById('confirm-close-all-btn'),
       cancelCloseAllBtn: document.getElementById('cancel-close-all-btn'),
+      // Focus Mode Elements
+      focusModeBtn: document.getElementById('focus-mode-btn'),
+      focusModeBtnMobile: document.getElementById('focus-mode-btn-mobile'),
     };
 
     this.initTheme();
@@ -111,6 +114,14 @@ export const ui = {
     this.elements.themeToggleBtn.addEventListener('click', () => this.toggleTheme());
     if (this.elements.themeToggleBtnMobile) {
         this.elements.themeToggleBtnMobile.addEventListener('click', () => this.toggleTheme());
+    }
+
+    // Focus Mode Events (Desktop and Mobile)
+    if (this.elements.focusModeBtn) {
+        this.elements.focusModeBtn.addEventListener('click', () => this.toggleFocusMode());
+    }
+    if (this.elements.focusModeBtnMobile) {
+        this.elements.focusModeBtnMobile.addEventListener('click', () => this.toggleFocusMode());
     }
 
     // Sidebar Events
@@ -699,5 +710,22 @@ price + tax`;
  updateThemeSwitch(isDark) {
     // Theme icons are automatically toggled via Tailwind's dark: classes
     // No manual DOM manipulation needed
+ },
+
+ toggleFocusMode() {
+    const body = document.body;
+    const isFocusMode = body.classList.contains('focus-mode');
+    
+    if (isFocusMode) {
+      body.classList.remove('focus-mode');
+    } else {
+      body.classList.add('focus-mode');
+      // Focus on editor
+      this.elements.editor.focus();
+    }
+ },
+
+ exitFocusMode() {
+    document.body.classList.remove('focus-mode');
  }
 };

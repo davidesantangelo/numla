@@ -45,6 +45,11 @@ export const ui = {
       confirmDeleteBtn: document.getElementById('confirm-delete-btn'),
       cancelDeleteBtn: document.getElementById('cancel-delete-btn'),
       noteTitleDisplay: document.getElementById('note-title-display'),
+      // Bottom Bar Elements
+      bottomBarExpanded: document.getElementById('bottom-bar-expanded'),
+      bottomBarToggle: document.getElementById('bottom-bar-toggle'),
+      expandIcon: document.getElementById('expand-icon'),
+      collapseIcon: document.getElementById('collapse-icon'),
       // Bottom Bar Theme Toggle
       themeToggleBtn: document.getElementById('theme-toggle-btn'),
       // Tab Bar
@@ -98,6 +103,11 @@ export const ui = {
 
     // Theme Toggle Event (Bottom Bar)
     this.elements.themeToggleBtn.addEventListener('click', () => this.toggleTheme());
+
+    // Bottom Bar Toggle Event
+    if (this.elements.bottomBarToggle) {
+        this.elements.bottomBarToggle.addEventListener('click', () => this.toggleBottomBar());
+    }
 
     // Sidebar Events
     if (this.elements.menuBtn) {
@@ -182,6 +192,37 @@ export const ui = {
           deleteModal.classList.add('hidden');
           deleteModalOverlay.classList.add('hidden');
       }, 300);
+  },
+
+  toggleBottomBar() {
+      const { bottomBarExpanded, expandIcon, collapseIcon, noteTitleDisplay } = this.elements;
+      if (!bottomBarExpanded || !expandIcon || !collapseIcon) return;
+
+      const isExpanded = !bottomBarExpanded.classList.contains('hidden');
+      
+      if (isExpanded) {
+          // Collapse - show more title characters
+          bottomBarExpanded.classList.add('hidden');
+          bottomBarExpanded.classList.remove('flex');
+          expandIcon.classList.remove('hidden');
+          collapseIcon.classList.add('hidden');
+          // Expand title width when collapsed
+          if (noteTitleDisplay) {
+              noteTitleDisplay.classList.remove('max-w-[120px]', 'md:max-w-[140px]');
+              noteTitleDisplay.classList.add('max-w-[200px]', 'md:max-w-[280px]');
+          }
+      } else {
+          // Expand - reduce title to make room for controls
+          bottomBarExpanded.classList.remove('hidden');
+          bottomBarExpanded.classList.add('flex');
+          expandIcon.classList.add('hidden');
+          collapseIcon.classList.remove('hidden');
+          // Reduce title width when expanded
+          if (noteTitleDisplay) {
+              noteTitleDisplay.classList.remove('max-w-[200px]', 'md:max-w-[280px]');
+              noteTitleDisplay.classList.add('max-w-[120px]', 'md:max-w-[140px]');
+          }
+      }
   },
 
 

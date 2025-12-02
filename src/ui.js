@@ -24,6 +24,10 @@ export const ui = {
   calculator: new Calculator(),
   lastCalculatedText: '',
   lastResults: [],
+  sidebarNotes: [], // Store all notes for sidebar filtering
+  sidebarActiveNoteId: null, // Store active note ID for sidebar
+  tabManagerNotes: [], // Store all notes for tab manager filtering
+  tabManagerActiveNoteId: null, // Store active note ID for tab manager
   
   elements: {},
 
@@ -60,12 +64,14 @@ export const ui = {
       sidebarOverlay: document.getElementById('sidebar-overlay'),
       sidebarCloseBtn: document.getElementById('sidebar-close-btn'),
       sidebarNewBtn: document.getElementById('sidebar-new-btn'),
+      sidebarSearchInput: document.getElementById('sidebar-search-input'),
       sidebarList: document.getElementById('sidebar-list'),
       // Tab Manager Sidebar Elements
       tabManagerBtn: document.getElementById('tab-manager-btn'),
       tabManagerSidebar: document.getElementById('tab-manager-sidebar'),
       tabManagerOverlay: document.getElementById('tab-manager-overlay'),
       tabManagerCloseBtn: document.getElementById('tab-manager-close-btn'),
+      tabManagerSearchInput: document.getElementById('tab-manager-search-input'),
       tabManagerList: document.getElementById('tab-manager-list'),
       deleteAllNotesBtn: document.getElementById('delete-all-notes-btn'),
       // Delete All Notes Modal Elements
@@ -117,6 +123,9 @@ export const ui = {
     if (this.elements.sidebarOverlay) {
         this.elements.sidebarOverlay.addEventListener('click', () => this.toggleSidebar(false));
     }
+    if (this.elements.sidebarSearchInput) {
+        this.elements.sidebarSearchInput.addEventListener('input', (e) => this.filterSidebarNotes(e.target.value));
+    }
 
     // Tab Manager Sidebar Events
     if (this.elements.tabManagerBtn) {
@@ -127,6 +136,9 @@ export const ui = {
     }
     if (this.elements.tabManagerOverlay) {
         this.elements.tabManagerOverlay.addEventListener('click', () => this.toggleTabManager(false));
+    }
+    if (this.elements.tabManagerSearchInput) {
+        this.elements.tabManagerSearchInput.addEventListener('input', (e) => this.filterTabManagerNotes(e.target.value));
     }
 
     // Close All Tabs Modal Events
@@ -278,10 +290,46 @@ export const ui = {
   renderTabManagerItems(notes, activeNoteId) {
       if (!this.elements.tabManagerList) return;
       
+      // Store notes for filtering
+      this.tabManagerNotes = notes;
+      this.tabManagerActiveNoteId = activeNoteId;
+      
+      // Clear search input when re-rendering
+      if (this.elements.tabManagerSearchInput) {
+          this.elements.tabManagerSearchInput.value = '';
+      }
+      
+      this._renderTabManagerList(notes, activeNoteId);
+  },
+
+  filterTabManagerNotes(query) {
+      if (!this.tabManagerNotes) return;
+      
+      const searchTerm = query.toLowerCase().trim();
+      
+      if (!searchTerm) {
+          // Show all notes if search is empty
+          this._renderTabManagerList(this.tabManagerNotes, this.tabManagerActiveNoteId);
+          return;
+      }
+      
+      // Filter notes based on content
+      const filteredNotes = this.tabManagerNotes.filter(note => {
+          const content = (note.content || '').toLowerCase();
+          const firstLine = content.split('\n')[0].trim();
+          return content.includes(searchTerm) || firstLine.includes(searchTerm);
+      });
+      
+      this._renderTabManagerList(filteredNotes, this.tabManagerActiveNoteId);
+  },
+
+  _renderTabManagerList(notes, activeNoteId) {
+      if (!this.elements.tabManagerList) return;
+      
       this.elements.tabManagerList.innerHTML = '';
       
       if (notes.length === 0) {
-          this.elements.tabManagerList.innerHTML = '<div class="p-4 text-center text-zinc-500 text-sm font-mono">No notes yet</div>';
+          this.elements.tabManagerList.innerHTML = '<div class="p-4 text-center text-zinc-500 text-sm font-mono">No notes found</div>';
           return;
       }
 
@@ -337,10 +385,46 @@ export const ui = {
   renderSidebarItems(notes, activeNoteId) {
       if (!this.elements.sidebarList) return;
       
+      // Store notes for filtering
+      this.sidebarNotes = notes;
+      this.sidebarActiveNoteId = activeNoteId;
+      
+      // Clear search input when re-rendering
+      if (this.elements.sidebarSearchInput) {
+          this.elements.sidebarSearchInput.value = '';
+      }
+      
+      this._renderSidebarList(notes, activeNoteId);
+  },
+
+  filterSidebarNotes(query) {
+      if (!this.sidebarNotes) return;
+      
+      const searchTerm = query.toLowerCase().trim();
+      
+      if (!searchTerm) {
+          // Show all notes if search is empty
+          this._renderSidebarList(this.sidebarNotes, this.sidebarActiveNoteId);
+          return;
+      }
+      
+      // Filter notes based on content
+      const filteredNotes = this.sidebarNotes.filter(note => {
+          const content = (note.content || '').toLowerCase();
+          const firstLine = content.split('\n')[0].trim();
+          return content.includes(searchTerm) || firstLine.includes(searchTerm);
+      });
+      
+      this._renderSidebarList(filteredNotes, this.sidebarActiveNoteId);
+  },
+
+  _renderSidebarList(notes, activeNoteId) {
+      if (!this.elements.sidebarList) return;
+      
       this.elements.sidebarList.innerHTML = '';
       
       if (notes.length === 0) {
-          this.elements.sidebarList.innerHTML = '<div class="p-4 text-center text-zinc-500 text-sm font-mono">No notes yet</div>';
+          this.elements.sidebarList.innerHTML = '<div class="p-4 text-center text-zinc-500 text-sm font-mono">No notes found</div>';
           return;
       }
 

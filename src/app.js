@@ -1,5 +1,5 @@
 import { store } from './store.js';
-import { ui } from './ui.js';
+import { ui, debounce } from './ui.js';
 
 let activeNoteId = null;
 let spotlightIndex = 0;
@@ -9,6 +9,16 @@ let openTabs = []; // Array of note IDs
 
 const TABS_STORAGE_KEY = 'numla-open-tabs';
 const ACTIVE_TAB_KEY = 'numla-active-tab';
+const CALC_DEBOUNCE_MS = 80;
+const SAVE_DEBOUNCE_MS = 200;
+
+const debouncedCalculate = debounce((content) => {
+  ui.calculateAndRender(content);
+}, CALC_DEBOUNCE_MS);
+
+const debouncedSave = debounce((noteId, content, timestamp) => {
+  persistNoteContent(noteId, content, timestamp);
+}, SAVE_DEBOUNCE_MS);
 
 export function initApp() {
   ui.init();
@@ -93,6 +103,10 @@ function closeTab(id) {
   const index = openTabs.indexOf(id);
   if (index === -1) return;
 
+  if (activeNoteId === id) {
+    flushPendingEditorWork();
+  }
+
   openTabs.splice(index, 1);
   saveTabs();
 
@@ -130,7 +144,7 @@ function renderTabs() {
     const isActive = tabId === activeNoteId;
     const firstLine = (note.content || '').split('\n')[0].trim();
     const title = firstLine || 'New Note';
-    const displayTitle = title.length > 20 ? title.substring(0, 20) + '...' : title;
+    const displayTitle = ui._getDisplayTitle(title);
     
     return `
       <div class="tab-item flex-shrink-0 snap-start flex items-center gap-2 px-6 h-full text-sm font-mono cursor-pointer transition-all ${
@@ -192,6 +206,12 @@ function renderTabs() {
 }
 
 function selectNote(id) {
+  if (activeNoteId && activeNoteId !== id) {
+    flushPendingEditorWork();
+  } else {
+    debouncedCalculate.cancel();
+    debouncedSave.cancel();
+  }
   activeNoteId = id;
   localStorage.setItem(ACTIVE_TAB_KEY, id);
   const notes = store.getNotes();
@@ -238,6 +258,26 @@ function createNewNote() {
   closeSpotlight();
   openTab(newNote.id);
   ui.elements.editor.focus();
+}
+
+
+function getTitleFromContent(content) {
+  const firstLine = (content || '').split('\n')[0].trim();
+  return firstLine || 'New Note';
+}
+
+function persistNoteContent(noteId, content, timestamp = Date.now()) {
+  if (!noteId) return;
+  const note = store.getNoteById(noteId);
+  if (!note) return;
+  store.saveNote({ ...note, content, updatedAt: timestamp });
+}
+
+function flushPendingEditorWork() {
+  if (!activeNoteId || !ui.elements.editor) return;
+  debouncedCalculate.cancel();
+  debouncedSave.cancel();
+  persistNoteContent(activeNoteId, ui.elements.editor.value, Date.now());
 }
 
 
@@ -347,25 +387,17 @@ function setupEventListeners() {
   // Editor Input (Auto-save)
   ui.elements.editor.addEventListener('input', (e) => {
     if (!activeNoteId) return;
-    
     const content = e.target.value;
-    
-    // Trigger calculation
-    ui.calculateAndRender(content);
+    const timestamp = Date.now();
+    const title = getTitleFromContent(content);
 
-    const notes = store.getNotes();
-    const currentNote = notes.find(n => n.id === activeNoteId);
-    
-    if (currentNote) {
-      store.saveNote({ ...currentNote, content });
-      // Update title in bottom bar
-      const firstLine = content.split('\n')[0].trim();
-      const title = firstLine || 'New Note';
-      ui.updateNoteTitle(title);
-      // Update timestamp
-      ui.updateTimestamp(Date.now());
-      renderTabs();
-    }
+    ui.updateNoteTitle(title);
+    ui.updateTimestamp(timestamp);
+    ui.updateTabMetadata(activeNoteId, title);
+    ui.updateSidebarMetadata(activeNoteId, title, timestamp);
+
+    debouncedCalculate(content);
+    debouncedSave(activeNoteId, content, timestamp);
   });
 
   // Sidebar List Click

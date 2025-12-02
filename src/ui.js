@@ -1,16 +1,23 @@
 import { Calculator } from './calculator.js';
 
 // Debounce utility function
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
+export function debounce(func, wait) {
+  let timeout;
+  const debounced = function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
     };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+  debounced.cancel = () => {
+    if (timeout) {
+      clearTimeout(timeout);
+      timeout = null;
+    }
+  };
+  return debounced;
 }
 
 export const ui = {
@@ -194,12 +201,13 @@ export const ui = {
           return;
       }
 
-      notes.forEach(note => {
+        notes.forEach(note => {
           const isActive = note.id === activeNoteId;
           const content = note.content || '';
           const firstLine = content.split('\n')[0].trim();
-          const title = firstLine || 'New Note';
-          const date = new Date(note.updatedAt || note.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            const title = firstLine || 'New Note';
+            const displayTitle = this._getDisplayTitle(title);
+            const date = this._formatSidebarDate(note.updatedAt || note.createdAt);
 
           const el = document.createElement('div');
           el.className = `p-3 mb-1 rounded-lg cursor-pointer flex justify-between items-center transition-colors ${
@@ -209,9 +217,9 @@ export const ui = {
           }`;
           
           el.innerHTML = `
-              <div class="flex flex-col overflow-hidden">
-                  <span class="font-mono text-sm truncate">${this._escapeHtml(title)}</span>
-                  <span class="text-[10px] font-mono opacity-60">${date}</span>
+                <div class="flex flex-col overflow-hidden">
+                  <span class="font-mono text-sm truncate sidebar-note-title">${this._escapeHtml(displayTitle)}</span>
+                  <span class="text-[10px] font-mono opacity-60 sidebar-note-date">${date}</span>
               </div>
               ${isActive ? '<div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div>' : ''}
           `;
@@ -242,7 +250,7 @@ export const ui = {
       const content = note.content || '';
       const firstLine = content.split('\n')[0].trim();
       const title = firstLine || 'New Note';
-      const date = new Date(note.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      const date = this._formatSidebarDate(note.updatedAt);
 
       el.innerHTML = `
         <span class="font-mono text-sm truncate pr-4">${this._escapeHtml(title)}</span>
@@ -330,6 +338,30 @@ price + tax`;
     }
   },
 
+  updateTabMetadata(noteId, title) {
+    if (!this.elements.tabBar) return;
+    const tab = this.elements.tabBar.querySelector(`[data-tab-id="${noteId}"]`);
+    if (!tab) return;
+    const label = tab.querySelector('.tab-title');
+      if (label) {
+        label.textContent = this._getDisplayTitle(title);
+    }
+  },
+
+  updateSidebarMetadata(noteId, title, updatedAt) {
+    if (!this.elements.sidebarList) return;
+    const el = this.elements.sidebarList.querySelector(`[data-id="${noteId}"]`);
+    if (!el) return;
+    const titleEl = el.querySelector('.sidebar-note-title');
+    if (titleEl) {
+      titleEl.textContent = this._getDisplayTitle(title || 'New Note');
+    }
+    const dateEl = el.querySelector('.sidebar-note-date');
+    if (dateEl) {
+      dateEl.textContent = this._formatSidebarDate(updatedAt);
+    }
+  },
+
   calculateAndRender(text) {
       // Skip calculation if text hasn't changed
       if (text === this.lastCalculatedText) {
@@ -355,6 +387,20 @@ price + tax`;
          .replace(/"/g, "&quot;")
          .replace(/'/g, "&#039;");
  },
+
+  _getDisplayTitle(title) {
+    const safeTitle = title || 'New Note';
+    return safeTitle.length > 20 ? `${safeTitle.substring(0, 20)}...` : safeTitle;
+  },
+
+  _formatSidebarDate(timestamp) {
+    if (!timestamp) return '';
+    try {
+      return new Date(timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    } catch (e) {
+      return '';
+    }
+  },
 
 
  initTheme(noteId = null) {

@@ -6,6 +6,9 @@ const math = create(all);
 
 // Initialize currency service and configure units
 let currenciesConfigured = false;
+let configurePromise = null;
+let currencyRetryTimeout = null;
+const CURRENCY_RETRY_DELAY = 5 * 60 * 1000; // Retry every 5 minutes on failure
 
 // Timezone mappings for natural language
 const TIMEZONE_MAP = {
@@ -130,51 +133,68 @@ initCSSUnits();
 
 async function configureCurrencies() {
     if (currenciesConfigured) return;
+    if (configurePromise) return configurePromise;
     
-    try {
-        // Ensure USD base unit exists first
+    configurePromise = (async () => {
         try {
-            if (!math.Unit.isValuelessUnit('USD')) {
-                math.createUnit('USD', { aliases: ['dollar', 'dollars', 'usd'] });
-            }
-        } catch (e) {
-            // USD already exists, that's fine
-        }
-        
-        // Fetch live rates
-        await currencyService.fetchRates();
-        const rates = currencyService.getRates();
-        
-        // Update all available currencies with live rates (except USD which is base)
-        for (const [currency, rate] of Object.entries(rates)) {
-            if (currency === 'USD') continue; // Skip base currency
-            
+            // Ensure USD base unit exists first
             try {
-                const aliases = [
-                    currency.toLowerCase(),
-                    currency.toLowerCase() + 's',
-                    currency,
-                    currency + 's'
-                ];
-                
-                // Create or override unit based on USD rate
-                // API returns 1 USD = rate * Currency
-                // So 1 Currency = (1 / rate) USD
-                math.createUnit(currency, { 
-                    definition: `${1 / rate} USD`, 
-                    aliases 
-                }, { override: true });
+                if (!math.Unit.isValuelessUnit('USD')) {
+                    math.createUnit('USD', { aliases: ['dollar', 'dollars', 'usd'] });
+                }
             } catch (e) {
-                console.warn(`Failed to configure ${currency}:`, e.message);
+                // USD already exists, that's fine
             }
+            
+            // Fetch live rates
+            await currencyService.fetchRates();
+            const rates = currencyService.getRates();
+            
+            // Update all available currencies with live rates (except USD which is base)
+            for (const [currency, rate] of Object.entries(rates)) {
+                if (currency === 'USD') continue; // Skip base currency
+                
+                try {
+                    const aliases = [
+                        currency.toLowerCase(),
+                        currency.toLowerCase() + 's',
+                        currency,
+                        currency + 's'
+                    ];
+                    
+                    // Create or override unit based on USD rate
+                    // API returns 1 USD = rate * Currency
+                    // So 1 Currency = (1 / rate) USD
+                    math.createUnit(currency, { 
+                        definition: `${1 / rate} USD`, 
+                        aliases 
+                    }, { override: true });
+                } catch (e) {
+                    console.warn(`Failed to configure ${currency}:`, e.message);
+                }
+            }
+            
+            currenciesConfigured = true;
+            console.log('Currencies configured with live rates');
+        } catch (e) {
+            currenciesConfigured = false;
+            console.error('Failed to configure live currencies:', e);
+            scheduleCurrencyRetry();
+            throw e;
+        } finally {
+            configurePromise = null;
         }
-        
-        currenciesConfigured = true;
-        console.log('Currencies configured with live rates');
-    } catch (e) {
-        console.error('Failed to configure live currencies:', e);
-        currenciesConfigured = true; // Mark as configured even with fallback
-    }
+    })();
+    
+    return configurePromise;
+}
+
+function scheduleCurrencyRetry() {
+    if (currencyRetryTimeout) return;
+    currencyRetryTimeout = setTimeout(() => {
+        currencyRetryTimeout = null;
+        configureCurrencies().catch(() => {});
+    }, CURRENCY_RETRY_DELAY);
 }
 
 export class Calculator {
@@ -191,6 +211,10 @@ export class Calculator {
         // Input validation
         if (typeof text !== 'string') {
             return [];
+        }
+
+        if (!currenciesConfigured) {
+            configureCurrencies().catch(() => {});
         }
         
         // Limit input size to prevent performance issues
@@ -759,22 +783,15 @@ export class Calculator {
                 // Parse the time
                 const parsedTime = this._parseTime(timeStr);
                 if (parsedTime) {
-                    // Create date in source timezone
-                    const now = new Date();
-                    const sourceDate = new Date(
-                        now.getFullYear(), 
-                        now.getMonth(), 
-                        now.getDate(),
-                        parsedTime.hours,
-                        parsedTime.minutes
-                    );
-                    
-                    return { 
-                        type: 'timeConversion', 
-                        date: sourceDate, 
-                        fromTimezone, 
-                        toTimezone 
-                    };
+                    const utcDate = this._convertLocalTimeToUtc(parsedTime, fromTimezone);
+                    if (utcDate) {
+                        return { 
+                            type: 'timeConversion', 
+                            date: utcDate, 
+                            fromTimezone, 
+                            toTimezone 
+                        };
+                    }
                 }
             }
         }
@@ -797,6 +814,31 @@ export class Calculator {
         return { hours, minutes };
     }
 
+    _convertLocalTimeToUtc(parsedTime, fromTimezone) {
+        if (!parsedTime || !fromTimezone) {
+            return null;
+        }
+
+        try {
+            const reference = new Date();
+            const approxUtc = Date.UTC(
+                reference.getFullYear(),
+                reference.getMonth(),
+                reference.getDate(),
+                parsedTime.hours,
+                parsedTime.minutes,
+                0,
+                0
+            );
+            const guessDate = new Date(approxUtc);
+            const offsetMinutes = getTimezoneOffsetMinutes(guessDate, fromTimezone);
+            return new Date(guessDate.getTime() - offsetMinutes * 60000);
+        } catch (e) {
+            console.warn('Failed timezone conversion:', e.message);
+            return null;
+        }
+    }
+
     _formatWithBase(num, format) {
         const intNum = Math.round(num);
         switch (format) {
@@ -816,4 +858,33 @@ export class Calculator {
                 return num;
         }
     }
+}
+
+function getTimezoneOffsetMinutes(date, timeZone) {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        hour12: false,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    const parts = formatter.formatToParts(date);
+    const filled = {};
+    for (const { type, value } of parts) {
+        if (type !== 'literal') {
+            filled[type] = value;
+        }
+    }
+    const asUTC = Date.UTC(
+        Number(filled.year),
+        Number(filled.month) - 1,
+        Number(filled.day),
+        Number(filled.hour),
+        Number(filled.minute),
+        Number(filled.second ?? '0')
+    );
+    return (asUTC - date.getTime()) / 60000;
 }

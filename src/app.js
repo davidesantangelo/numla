@@ -408,6 +408,13 @@ function setupEventListeners() {
     if (activeNoteId) ui.showDeleteModal();
   });
 
+  // Mobile Delete Button -> Show Delete Modal
+  if (ui.elements.deleteBtnMobile) {
+    ui.elements.deleteBtnMobile.addEventListener('click', () => {
+      if (activeNoteId) ui.showDeleteModal();
+    });
+  }
+
   // Export Button -> Download note as text file
   ui.elements.exportBtn.addEventListener('click', () => {
     if (!activeNoteId) return;
@@ -430,6 +437,31 @@ function setupEventListeners() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   });
+
+  // Mobile Export Button -> Download note as text file
+  if (ui.elements.exportBtnMobile) {
+    ui.elements.exportBtnMobile.addEventListener('click', () => {
+      if (!activeNoteId) return;
+      
+      const notes = store.getNotes();
+      const currentNote = notes.find(n => n.id === activeNoteId);
+      if (!currentNote) return;
+      
+      const content = currentNote.content || '';
+      const firstLine = content.split('\n')[0].trim();
+      const filename = (firstLine || 'note') + '.txt';
+      
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  }
 
   // Confirm Delete Button (Modal)
   ui.elements.confirmDeleteBtn.addEventListener('click', () => {

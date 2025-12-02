@@ -27,3 +27,9 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Smaller caret/cursor */
+#note-editor {
+  caret-width: thin;
+  caret-shape: bar;
+}

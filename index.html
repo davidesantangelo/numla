@@ -122,6 +122,78 @@
           <div id="tab-bar" class="flex-1 flex items-center h-12 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth">
             <!-- Tabs injected here -->
           </div>
+          <!-- Desktop Controls (right side of tab bar) -->
+          <div class="flex items-center gap-1 ml-4 flex-shrink-0">
+            <span
+              id="timestamp-display"
+              class="text-xs font-mono text-zinc-500 dark:text-zinc-500 whitespace-nowrap mr-2"
+            >Dec 1, 2025 00:00:00</span>
+            <button
+              id="export-btn"
+              class="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/30 rounded-lg transition-colors"
+              title="Export Note"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+            </button>
+            <button
+              id="delete-btn"
+              class="p-2 text-zinc-400 dark:text-zinc-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+              title="Delete Note"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path
+                  d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                ></path>
+              </svg>
+            </button>
+            <button
+              id="theme-toggle-btn"
+              class="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/30 rounded-lg transition-colors"
+              title="Toggle Theme"
+            >
+              <!-- Sun icon (shown in dark mode) -->
+              <svg class="hidden dark:block" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+              <!-- Moon icon (shown in light mode) -->
+              <svg class="block dark:hidden" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -175,37 +247,37 @@
       <!-- Main Editor -->
       <main
         id="main-content"
-        class="flex-1 flex flex-col h-full pt-14 bg-zinc-50 dark:bg-black relative transition-all duration-300 ease-out"
+        class="flex-1 flex flex-col h-full pt-14 pb-16 md:pb-0 bg-zinc-50 dark:bg-black relative transition-all duration-300 ease-out"
       >
 
-        <!-- Bottom Bar (Collapsible) -->
+        <!-- Mobile Bottom Bar (fixed to bottom, only visible on mobile) -->
         <div
-          id="bottom-bar"
-          class="absolute bottom-12 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center justify-center gap-2 px-3 py-2 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 rounded-xl shadow-lg z-40 transition-all duration-300 ease-out hover:bg-white/90 dark:hover:bg-zinc-900/90"
+          id="mobile-bottom-bar"
+          class="md:hidden fixed bottom-0 left-0 right-0 flex items-center justify-between px-4 py-3 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-t border-zinc-200/50 dark:border-zinc-800/50 z-40"
         >
-          <!-- Collapsed view: just title and expand button -->
-          <span
-            id="note-title-display"
-            class="text-sm font-mono text-zinc-600 dark:text-zinc-400 truncate max-w-[200px] md:max-w-[280px] transition-all duration-300"
-          >New Note</span>
-          
-          <!-- Expanded controls (hidden by default) -->
-          <div id="bottom-bar-expanded" class="hidden items-center gap-2 overflow-hidden transition-all duration-300 ease-out">
-            <div class="w-px h-4 bg-zinc-300 dark:bg-zinc-700"></div>
+          <!-- Left side: Note title -->
+          <div class="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
             <span
-              id="timestamp-display"
-              class="text-xs font-mono text-zinc-500 dark:text-zinc-500 whitespace-nowrap"
-            >Dec 1, 2025 00:00:00</span>
-            <div class="w-px h-4 bg-zinc-300 dark:bg-zinc-700"></div>
+              id="note-title-display"
+              class="text-sm font-mono text-zinc-600 dark:text-zinc-400 truncate"
+            >New Note</span>
+            <span
+              id="timestamp-display-mobile"
+              class="text-[10px] font-mono text-zinc-400 dark:text-zinc-600 whitespace-nowrap"
+            ></span>
+          </div>
+          
+          <!-- Right side: Controls -->
+          <div class="flex items-center gap-1 flex-shrink-0">
             <button
-              id="export-btn"
-              class="p-1 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+              id="export-btn-mobile"
+              class="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 active:bg-zinc-100 dark:active:bg-zinc-800 rounded-lg transition-colors"
               title="Export Note"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
+                width="18"
+                height="18"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -219,14 +291,14 @@
               </svg>
             </button>
             <button
-              id="delete-btn"
-              class="p-1 text-zinc-400 dark:text-zinc-500 hover:text-red-500 transition-colors"
+              id="delete-btn-mobile"
+              class="p-2 text-zinc-400 dark:text-zinc-500 hover:text-red-500 active:bg-red-500/10 rounded-lg transition-colors"
               title="Delete Note"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
+                width="18"
+                height="18"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -240,15 +312,13 @@
                 ></path>
               </svg>
             </button>
-            <div class="w-px h-4 bg-zinc-300 dark:bg-zinc-700"></div>
-            <!-- Theme Toggle Icon -->
             <button
-              id="theme-toggle-btn"
-              class="p-1 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+              id="theme-toggle-btn-mobile"
+              class="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 active:bg-zinc-100 dark:active:bg-zinc-800 rounded-lg transition-colors"
               title="Toggle Theme"
             >
               <!-- Sun icon (shown in dark mode) -->
-              <svg class="hidden dark:block" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg class="hidden dark:block" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="5"></circle>
                 <line x1="12" y1="1" x2="12" y2="3"></line>
                 <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -260,33 +330,11 @@
                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
               </svg>
               <!-- Moon icon (shown in light mode) -->
-              <svg class="block dark:hidden" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg class="block dark:hidden" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
               </svg>
             </button>
           </div>
-          
-          <!-- Expand/Collapse Toggle Button -->
-          <button
-            id="bottom-bar-toggle"
-            class="p-1 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-all duration-300 ml-1"
-            title="Expand/Collapse"
-          >
-            <!-- Expand icon (arrows pointing outward) - shown when collapsed -->
-            <svg id="expand-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="transition-transform duration-300">
-              <polyline points="15 3 21 3 21 9"></polyline>
-              <polyline points="9 21 3 21 3 15"></polyline>
-              <line x1="21" y1="3" x2="14" y2="10"></line>
-              <line x1="3" y1="21" x2="10" y2="14"></line>
-            </svg>
-            <!-- Compress icon (arrows pointing inward) - shown when expanded -->
-            <svg id="collapse-icon" class="hidden transition-transform duration-300" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="4 14 10 14 10 20"></polyline>
-              <polyline points="20 10 14 10 14 4"></polyline>
-              <line x1="14" y1="10" x2="21" y2="3"></line>
-              <line x1="3" y1="21" x2="10" y2="14"></line>
-            </svg>
-          </button>
         </div>
         <div class="flex-1 relative flex flex-row overflow-hidden my-6">
           <div

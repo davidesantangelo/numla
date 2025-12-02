@@ -44,14 +44,14 @@ export const ui = {
       deleteModal: document.getElementById('delete-modal'),
       confirmDeleteBtn: document.getElementById('confirm-delete-btn'),
       cancelDeleteBtn: document.getElementById('cancel-delete-btn'),
-      noteTitleDisplay: document.getElementById('note-title-display'),
-      // Bottom Bar Elements
-      bottomBarExpanded: document.getElementById('bottom-bar-expanded'),
-      bottomBarToggle: document.getElementById('bottom-bar-toggle'),
-      expandIcon: document.getElementById('expand-icon'),
-      collapseIcon: document.getElementById('collapse-icon'),
-      // Bottom Bar Theme Toggle
+      // Desktop controls (in tab bar)
       themeToggleBtn: document.getElementById('theme-toggle-btn'),
+      // Mobile Bottom Bar Elements
+      noteTitleDisplay: document.getElementById('note-title-display'),
+      timestampDisplayMobile: document.getElementById('timestamp-display-mobile'),
+      exportBtnMobile: document.getElementById('export-btn-mobile'),
+      deleteBtnMobile: document.getElementById('delete-btn-mobile'),
+      themeToggleBtnMobile: document.getElementById('theme-toggle-btn-mobile'),
       // Tab Bar
       tabBar: document.getElementById('tab-bar'),
       // Sidebar Elements
@@ -101,12 +101,10 @@ export const ui = {
         this.hideDeleteModal();
     });
 
-    // Theme Toggle Event (Bottom Bar)
+    // Theme Toggle Events (Desktop and Mobile)
     this.elements.themeToggleBtn.addEventListener('click', () => this.toggleTheme());
-
-    // Bottom Bar Toggle Event
-    if (this.elements.bottomBarToggle) {
-        this.elements.bottomBarToggle.addEventListener('click', () => this.toggleBottomBar());
+    if (this.elements.themeToggleBtnMobile) {
+        this.elements.themeToggleBtnMobile.addEventListener('click', () => this.toggleTheme());
     }
 
     // Sidebar Events
@@ -192,37 +190,6 @@ export const ui = {
           deleteModal.classList.add('hidden');
           deleteModalOverlay.classList.add('hidden');
       }, 300);
-  },
-
-  toggleBottomBar() {
-      const { bottomBarExpanded, expandIcon, collapseIcon, noteTitleDisplay } = this.elements;
-      if (!bottomBarExpanded || !expandIcon || !collapseIcon) return;
-
-      const isExpanded = !bottomBarExpanded.classList.contains('hidden');
-      
-      if (isExpanded) {
-          // Collapse - show more title characters
-          bottomBarExpanded.classList.add('hidden');
-          bottomBarExpanded.classList.remove('flex');
-          expandIcon.classList.remove('hidden');
-          collapseIcon.classList.add('hidden');
-          // Expand title width when collapsed
-          if (noteTitleDisplay) {
-              noteTitleDisplay.classList.remove('max-w-[120px]', 'md:max-w-[140px]');
-              noteTitleDisplay.classList.add('max-w-[200px]', 'md:max-w-[280px]');
-          }
-      } else {
-          // Expand - reduce title to make room for controls
-          bottomBarExpanded.classList.remove('hidden');
-          bottomBarExpanded.classList.add('flex');
-          expandIcon.classList.add('hidden');
-          collapseIcon.classList.remove('hidden');
-          // Reduce title width when expanded
-          if (noteTitleDisplay) {
-              noteTitleDisplay.classList.remove('max-w-[200px]', 'md:max-w-[280px]');
-              noteTitleDisplay.classList.add('max-w-[120px]', 'md:max-w-[140px]');
-          }
-      }
   },
 
 
@@ -479,16 +446,21 @@ price + tax`;
   },
 
   updateNoteTitle(title) {
+    // Update mobile title display
     if (this.elements.noteTitleDisplay) {
       this.elements.noteTitleDisplay.textContent = title || 'New Note';
     }
   },
 
   updateTimestamp(timestamp) {
+    // Update desktop timestamp
     if (!this.elements.timestamp) return;
     
     if (!timestamp) {
       this.elements.timestamp.textContent = '';
+      if (this.elements.timestampDisplayMobile) {
+        this.elements.timestampDisplayMobile.textContent = '';
+      }
       return;
     }
     
@@ -497,9 +469,13 @@ price + tax`;
       // Check if date is valid
       if (isNaN(date.getTime())) {
         this.elements.timestamp.textContent = '';
+        if (this.elements.timestampDisplayMobile) {
+          this.elements.timestampDisplayMobile.textContent = '';
+        }
         return;
       }
       
+      // Full format for desktop
       this.elements.timestamp.textContent = date.toLocaleString(undefined, {
         month: 'short',
         day: 'numeric',
@@ -508,9 +484,22 @@ price + tax`;
         minute: '2-digit',
         second: '2-digit'
       });
+      
+      // Short format for mobile
+      if (this.elements.timestampDisplayMobile) {
+        this.elements.timestampDisplayMobile.textContent = date.toLocaleString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
     } catch (e) {
       console.error('Error formatting date:', e);
       this.elements.timestamp.textContent = '';
+      if (this.elements.timestampDisplayMobile) {
+        this.elements.timestampDisplayMobile.textContent = '';
+      }
     }
   },
 

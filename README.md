@@ -183,6 +183,7 @@ Work with multiple notes simultaneously using the tab bar:
 - **Switch tabs**: Click on a tab to switch to that note
 - **Close tabs**: Click the `×` on a tab to close it
 - **New tab**: Click the `+` button at the end of the tab bar (or press `⌘J`)
+- **Tab Manager**: Click the grid icon (left of tabs) to open a sidebar with all notes, search, and bulk delete options
 
 ---
 

@@ -6,6 +6,22 @@ A minimal, beautiful calculator notepad for quick math, currency conversions, an
 
 ---
 
+## 🔒 Privacy First
+
+**Your data never leaves your device.**
+
+Numla stores everything locally in your browser using [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage):
+
+- ✅ **No server** — All notes are saved directly in your browser
+- ✅ **No account required** — No sign-up, no login, no password
+- ✅ **No tracking** — Zero analytics, no cookies, no telemetry
+- ✅ **No cloud sync** — Your calculations stay on your machine
+- ✅ **Fully offline** — Works without an internet connection (except for live currency rates)
+
+> **Note:** Since data is stored in localStorage, clearing your browser data will delete your notes. Consider exporting important notes using the download feature.
+
+---
+
 ## Features
 
 ### Write naturally, get instant results
@@ -200,7 +216,7 @@ Query time in major cities and timezone codes:
 - **Minimal** — No buttons cluttering your view. Just you and your calculations.
 - **Fast** — Results appear instantly as you type.
 - **Beautiful** — Dark mode by default. Light mode available. Per-note theme memory.
-- **Private** — Everything stays in your browser. No accounts. No tracking.
+- **Private** — All data is stored locally in your browser using localStorage. No servers, no accounts, no tracking. Your notes never leave your device.
 
 ---
 

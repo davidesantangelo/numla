@@ -73,13 +73,10 @@ prev + 20%                    → $ 720
 
 - **Tab System**: Open multiple notes as tabs for easy switching. Click the `+` button to create a new note.
 - **Spotlight Search**: Press `⌘K` to instantly search and jump to any note.
-- **New Note**: Press `⌘J` or click the `+` tab to create a new note.
-- **Tab Manager**: Click the grid icon to open the sidebar with all your notes. Search, switch, or delete notes easily.
 - **Focus Mode**: Hide all controls for distraction-free writing. Press `Esc` to exit.
 - **Per-Note Theme**: Each note remembers its own light/dark mode preference.
 - **Export**: Download any note as a `.txt` file.
 - **Mobile Ready**: Fully responsive design for on-the-go calculations.
-- **Bottom Bar**: Shows note title, timestamp, and quick actions (export, delete, theme toggle, focus mode).
 
 ---
 
@@ -141,12 +138,12 @@ Price: $10    ← Labels are stripped automatically
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action                  |
-| -------- | ----------------------- |
-| `⌘ J`    | Create new note         |
-| `⌘ K`    | Search notes            |
-| `↑` `↓`  | Navigate search results |
-| `Enter`  | Open selected note      |
+| Shortcut | Action                                 |
+| -------- | -------------------------------------- |
+| `⌘ J`    | Create new note                        |
+| `⌘ K`    | Search notes                           |
+| `↑` `↓`  | Navigate search results                |
+| `Enter`  | Open selected note                     |
 | `Esc`    | Close search / modal / Exit focus mode |
 
 ---

@@ -67,7 +67,7 @@
 
       <!-- Mobile Header & Menu Button -->
       <div class="fixed top-0 left-0 right-0 z-40 h-12 bg-zinc-50 dark:bg-black flex items-center px-4 md:hidden">
-        <button id="menu-btn" class="p-2 -ml-2 text-zinc-600 dark:text-zinc-400">
+        <button id="menu-btn" class="p-3 -ml-2 text-zinc-600 dark:text-zinc-400">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="3" width="7" height="7"></rect>
             <rect x="14" y="3" width="7" height="7"></rect>
@@ -84,7 +84,7 @@
       <div id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out md:hidden flex flex-col">
         <div class="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
           <span class="font-mono font-bold text-lg text-zinc-900 dark:text-white">Notes</span>
-          <button id="sidebar-close-btn" class="p-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-white">
+          <button id="sidebar-close-btn" class="p-3 text-zinc-500 hover:text-zinc-900 dark:hover:text-white">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -329,7 +329,7 @@
           <div class="flex items-center gap-1 flex-shrink-0">
             <button
               id="export-btn-mobile"
-              class="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 active:bg-zinc-100 dark:active:bg-zinc-800 rounded-lg transition-colors"
+              class="p-3 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 active:bg-zinc-100 dark:active:bg-zinc-800 rounded-lg transition-colors"
               title="Export Note"
             >
               <svg
@@ -350,7 +350,7 @@
             </button>
             <button
               id="delete-btn-mobile"
-              class="p-2 text-zinc-400 dark:text-zinc-500 hover:text-red-500 active:bg-red-500/10 rounded-lg transition-colors"
+              class="p-3 text-zinc-400 dark:text-zinc-500 hover:text-red-500 active:bg-red-500/10 rounded-lg transition-colors"
               title="Delete Note"
             >
               <svg
@@ -372,7 +372,7 @@
             </button>
             <button
               id="theme-toggle-btn-mobile"
-              class="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 active:bg-zinc-100 dark:active:bg-zinc-800 rounded-lg transition-colors"
+              class="p-3 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 active:bg-zinc-100 dark:active:bg-zinc-800 rounded-lg transition-colors"
               title="Toggle Theme"
             >
               <!-- Sun icon (shown in dark mode) -->
@@ -394,7 +394,7 @@
             </button>
             <button
               id="focus-mode-btn-mobile"
-              class="p-2 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 active:bg-zinc-100 dark:active:bg-zinc-800 rounded-lg transition-colors"
+              class="p-3 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 active:bg-zinc-100 dark:active:bg-zinc-800 rounded-lg transition-colors"
               title="Focus Mode"
             >
               <!-- Focus/Expand icon -->
@@ -414,14 +414,14 @@
             <!-- Highlighter Backdrop -->
             <div
               id="highlighter"
-              class="absolute inset-0 w-full h-full pl-8 pr-8 pt-4 pb-8 md:pl-16 md:pr-16 md:pt-6 md:pb-12 lg:pl-24 lg:pr-24 whitespace-pre-wrap break-words overflow-hidden pointer-events-none text-zinc-800 dark:text-gray-300 bg-transparent z-0"
+              class="absolute inset-0 w-full h-full pl-4 pr-4 pt-4 pb-8 md:pl-16 md:pr-16 md:pt-6 md:pb-12 lg:pl-24 lg:pr-24 whitespace-pre-wrap break-words overflow-hidden pointer-events-none text-zinc-800 dark:text-gray-300 bg-transparent z-0"
               aria-hidden="true"
             ></div>
 
             <!-- Actual Editor -->
             <textarea
               id="note-editor"
-              class="absolute inset-0 w-full h-full pl-8 pr-8 pt-4 pb-8 md:pl-16 md:pr-16 md:pt-6 md:pb-12 lg:pl-24 lg:pr-24 resize-none focus:outline-none text-transparent caret-zinc-900 dark:caret-white bg-transparent overflow-y-scroll no-scrollbar z-10"
+              class="absolute inset-0 w-full h-full pl-4 pr-4 pt-4 pb-8 md:pl-16 md:pr-16 md:pt-6 md:pb-12 lg:pl-24 lg:pr-24 resize-none focus:outline-none text-transparent caret-zinc-900 dark:caret-white bg-transparent overflow-y-scroll no-scrollbar z-10"
               placeholder="Start typing your calculation...
 
 Examples:
@@ -434,10 +434,10 @@ price + tax"
               autofocus
             ></textarea>
           </div>
-          <div class="w-[28%] md:w-[18%] lg:w-[15%] relative overflow-hidden">
+          <div class="w-[35%] md:w-[18%] lg:w-[15%] relative overflow-hidden">
             <div
               id="results-display"
-              class="w-full h-full pl-2 pr-8 pt-4 pb-8 md:pl-4 md:pr-16 md:pt-6 md:pb-12 lg:pr-24 text-xs md:text-sm lg:text-base leading-relaxed text-blue-600 dark:text-blue-400 font-mono text-right overflow-y-auto overflow-x-hidden select-none whitespace-nowrap"
+              class="w-full h-full pl-2 pr-2 pt-4 pb-8 md:pl-4 md:pr-16 md:pt-6 md:pb-12 lg:pr-24 text-xs md:text-sm lg:text-base leading-relaxed text-blue-600 dark:text-blue-400 font-mono text-right overflow-y-auto overflow-x-hidden select-none whitespace-nowrap"
             >
               <!-- Results injected here -->
             </div>

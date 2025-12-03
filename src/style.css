@@ -118,3 +118,91 @@ body {
   font-size: inherit;
   line-height: inherit;
 }
+
+/* ====== Floating Command Bar ====== */
+
+/* Command bar entrance animation */
+#command-bar .command-bar-wrapper {
+  animation: commandBarEnter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes commandBarEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Inner bar styling */
+.command-bar-inner {
+  position: relative;
+}
+
+/* Command button styling */
+.command-btn {
+  position: relative;
+}
+
+/* Tooltip styling */
+.command-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: #18181b;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  border-radius: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.command-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #18181b;
+}
+
+.dark .command-tooltip {
+  background: #fafafa;
+  color: #18181b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark .command-tooltip::after {
+  border-top-color: #fafafa;
+}
+
+.command-btn:hover .command-tooltip {
+  opacity: 1;
+}
+
+/* Hide command bar in focus mode */
+.focus-mode #command-bar .command-bar-wrapper {
+  opacity: 0 !important;
+  transform: translateY(20px) !important;
+  transition: all 0.3s ease;
+}
+
+.focus-mode #command-bar {
+  pointer-events: none !important;
+}
+
+/* Copy success feedback */
+.command-btn.copied {
+  color: #22c55e !important;
+}

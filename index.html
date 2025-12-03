@@ -123,7 +123,7 @@
 
       <!-- Tab Bar (Desktop only) -->
       <div class="hidden md:block fixed top-0 left-0 right-0 z-40 bg-zinc-50 dark:bg-black border-b border-zinc-200/50 dark:border-zinc-800/50">
-        <div class="flex items-center h-14 px-8 md:px-16 lg:px-24">
+        <div class="flex items-center h-16 px-8 md:px-16 lg:px-24">
           <!-- Tab Manager Button -->
           <button id="tab-manager-btn" class="flex-shrink-0 flex items-center justify-center w-8 h-8 mr-2 text-zinc-400 dark:text-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/30 rounded-lg transition-colors" title="Manage Tabs">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -133,7 +133,7 @@
               <rect x="3" y="14" width="7" height="7"></rect>
             </svg>
           </button>
-          <div id="tab-bar" class="flex-1 flex items-center h-14 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth">
+          <div id="tab-bar" class="flex-1 flex items-center h-16 overflow-x-auto no-scrollbar snap-x snap-mandatory scroll-smooth">
             <!-- Tabs injected here -->
           </div>
           <!-- Desktop Controls (right side of tab bar) -->
@@ -305,7 +305,7 @@
       <!-- Main Editor -->
       <main
         id="main-content"
-        class="flex-1 flex flex-col h-full pt-14 pb-16 md:pb-0 bg-zinc-50 dark:bg-black relative transition-all duration-300 ease-out"
+        class="flex-1 flex flex-col h-full pt-16 pb-16 md:pb-0 bg-zinc-50 dark:bg-black relative transition-all duration-300 ease-out"
       >
 
         <!-- Mobile Bottom Bar (fixed to bottom, only visible on mobile) -->
@@ -476,6 +476,69 @@ price + tax"
             </button>
           </div>
         </div>
+
+        <!-- Floating Command Bar -->
+        <div id="command-bar" class="hidden md:flex fixed bottom-6 inset-x-0 justify-center z-50 pointer-events-none">
+          <div class="command-bar-wrapper relative pointer-events-auto">
+          <div class="command-bar-inner flex items-center gap-0 px-1 py-0.5 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-2xl border border-white/30 dark:border-zinc-700/30 rounded-lg shadow-[0_4px_16px_rgba(0,0,0,0.08),0_0_0_1px_rgba(255,255,255,0.1)_inset] dark:shadow-[0_4px_16px_rgba(0,0,0,0.3),0_0_0_1px_rgba(255,255,255,0.05)_inset]">
+            
+            <!-- Percentage -->
+            <button id="cmd-percent" class="command-btn group relative flex items-center justify-center w-8 h-8 rounded text-zinc-500 dark:text-zinc-400 hover:text-amber-500 hover:bg-amber-500/10 transition-all duration-200" title="Insert %">
+              <span class="text-sm font-bold">%</span>
+              <span class="command-tooltip">Percent</span>
+            </button>
+
+            <!-- Power/Exponent -->
+            <button id="cmd-power" class="command-btn group relative flex items-center justify-center w-8 h-8 rounded text-zinc-500 dark:text-zinc-400 hover:text-purple-500 hover:bg-purple-500/10 transition-all duration-200" title="Insert ^">
+              <span class="text-sm font-bold">x<sup class="text-[9px]">n</sup></span>
+              <span class="command-tooltip">Power</span>
+            </button>
+
+            <!-- Square Root -->
+            <button id="cmd-sqrt" class="command-btn group relative flex items-center justify-center w-8 h-8 rounded text-zinc-500 dark:text-zinc-400 hover:text-emerald-500 hover:bg-emerald-500/10 transition-all duration-200" title="Insert sqrt()">
+              <span class="text-sm font-bold">√</span>
+              <span class="command-tooltip">Sqrt</span>
+            </button>
+
+            <!-- Divider -->
+            <div class="w-px h-4 bg-zinc-200/50 dark:bg-zinc-700/50 mx-0.5"></div>
+
+            <!-- Sum -->
+            <button id="cmd-sum" class="command-btn group relative flex items-center justify-center w-8 h-8 rounded text-zinc-500 dark:text-zinc-400 hover:text-teal-500 hover:bg-teal-500/10 transition-all duration-200" title="Insert sum">
+              <span class="text-sm font-bold">Σ</span>
+              <span class="command-tooltip">Sum</span>
+            </button>
+
+            <!-- Average -->
+            <button id="cmd-average" class="command-btn group relative flex items-center justify-center w-8 h-8 rounded text-zinc-500 dark:text-zinc-400 hover:text-cyan-500 hover:bg-cyan-500/10 transition-all duration-200" title="Insert avg">
+              <span class="text-sm font-bold">x̄</span>
+              <span class="command-tooltip">Avg</span>
+            </button>
+
+            <!-- Dollar/Currency -->
+            <button id="cmd-dollar" class="command-btn group relative flex items-center justify-center w-8 h-8 rounded text-zinc-500 dark:text-zinc-400 hover:text-green-500 hover:bg-green-500/10 transition-all duration-200" title="Insert $">
+              <span class="text-sm font-bold">$</span>
+              <span class="command-tooltip">USD</span>
+            </button>
+
+            <!-- Euro -->
+            <button id="cmd-euro" class="command-btn group relative flex items-center justify-center w-8 h-8 rounded text-zinc-500 dark:text-zinc-400 hover:text-blue-500 hover:bg-blue-500/10 transition-all duration-200" title="Insert €">
+              <span class="text-sm font-bold">€</span>
+              <span class="command-tooltip">EUR</span>
+            </button>
+
+            <!-- Divider -->
+            <div class="w-px h-4 bg-zinc-200/50 dark:bg-zinc-700/50 mx-0.5"></div>
+
+            <!-- Pi -->
+            <button id="cmd-pi" class="command-btn group relative flex items-center justify-center w-8 h-8 rounded text-zinc-500 dark:text-zinc-400 hover:text-indigo-500 hover:bg-indigo-500/10 transition-all duration-200" title="Insert π">
+              <span class="text-sm font-bold">π</span>
+              <span class="command-tooltip">Pi</span>
+            </button>
+          </div>
+          </div>
+        </div>
+
       </main>
     </div>
     <script type="module" src="/src/main.js"></script>

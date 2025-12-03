@@ -82,6 +82,17 @@ export const ui = {
       // Focus Mode Elements
       focusModeBtn: document.getElementById('focus-mode-btn'),
       focusModeBtnMobile: document.getElementById('focus-mode-btn-mobile'),
+      // Command Bar Elements
+      commandBar: document.getElementById('command-bar'),
+      cmdPercent: document.getElementById('cmd-percent'),
+      cmdPower: document.getElementById('cmd-power'),
+      cmdSqrt: document.getElementById('cmd-sqrt'),
+      cmdSum: document.getElementById('cmd-sum'),
+      cmdAverage: document.getElementById('cmd-average'),
+      cmdDollar: document.getElementById('cmd-dollar'),
+      cmdEuro: document.getElementById('cmd-euro'),
+      cmdPi: document.getElementById('cmd-pi'),
+      // Shortcuts Modal Elements (removed - no longer needed)
     };
 
     this.initTheme();
@@ -157,7 +168,119 @@ export const ui = {
         this.elements.cancelCloseAllBtn.addEventListener('click', () => this.hideCloseAllModal());
     }
 
+    // Command Bar Events
+    this.initCommandBar();
+
     console.log('UI Initialized');
+  },
+
+  initCommandBar() {
+    // Percentage
+    if (this.elements.cmdPercent) {
+      this.elements.cmdPercent.addEventListener('click', () => this.insertAtCursor('%'));
+    }
+
+    // Power
+    if (this.elements.cmdPower) {
+      this.elements.cmdPower.addEventListener('click', () => this.insertAtCursor('^'));
+    }
+
+    // Square Root
+    if (this.elements.cmdSqrt) {
+      this.elements.cmdSqrt.addEventListener('click', () => this.insertAtCursor('sqrt()', -1));
+    }
+
+    // Sum
+    if (this.elements.cmdSum) {
+      this.elements.cmdSum.addEventListener('click', () => this.insertSum());
+    }
+
+    // Average
+    if (this.elements.cmdAverage) {
+      this.elements.cmdAverage.addEventListener('click', () => this.insertAverage());
+    }
+
+    // Dollar (USD currency)
+    if (this.elements.cmdDollar) {
+      this.elements.cmdDollar.addEventListener('click', () => this.insertAtCursor('$'));
+    }
+
+    // Euro (EUR currency)
+    if (this.elements.cmdEuro) {
+      this.elements.cmdEuro.addEventListener('click', () => this.insertAtCursor('€'));
+    }
+
+    // Pi
+    if (this.elements.cmdPi) {
+      this.elements.cmdPi.addEventListener('click', () => this.insertAtCursor('pi'));
+    }
+
+    // Prevent buttons from stealing focus - keep cursor position
+    document.querySelectorAll('.command-btn').forEach(btn => {
+      btn.addEventListener('mousedown', (e) => {
+        e.preventDefault(); // Prevents the button from taking focus
+      });
+    });
+  },
+
+  insertAtCursor(text, cursorOffset = 0) {
+    if (!this.elements.editor) return;
+    
+    const editor = this.elements.editor;
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const value = editor.value;
+    
+    // Insert text at cursor position
+    const newValue = value.substring(0, start) + text + value.substring(end);
+    editor.value = newValue;
+    
+    // Set cursor position (cursorOffset allows positioning inside parentheses)
+    const newPos = start + text.length + cursorOffset;
+    editor.setSelectionRange(newPos, newPos);
+    
+    // Update highlighter immediately
+    this.updateHighlighter(newValue);
+    
+    // Trigger input event to recalculate
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
+    editor.focus();
+  },
+
+  async copyAllResults() {
+    const results = this.lastResults.filter(r => r && r.trim() !== '' && r !== '&nbsp;');
+    if (results.length === 0) return;
+    
+    // Extract plain text values
+    const plainValues = results.map(r => r.replace(/<[^>]*>/g, '').trim());
+    const text = plainValues.join('\n');
+    
+    try {
+      await navigator.clipboard.writeText(text);
+      
+      // Visual feedback
+      const btn = this.elements.cmdCopyAll;
+      btn.classList.add('copied');
+      setTimeout(() => btn.classList.remove('copied'), 300);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  },
+
+  insertSum() {
+    this.insertAtCursor('sum');
+  },
+
+  insertAverage() {
+    this.insertAtCursor('avg');
+  },
+
+  clearEditor() {
+    if (!this.elements.editor) return;
+    
+    this.elements.editor.value = '';
+    this.elements.editor.dispatchEvent(new Event('input', { bubbles: true }));
+    this.elements.editor.focus();
   },
 
 
@@ -176,7 +299,8 @@ export const ui = {
       // Variable Assignment Highlighting (var = value or $var = value)
       // Match variable names (with or without $) followed by = and a value
       // Use teal-500 for light mode and teal-400 for dark - more saturated and visible
-      html = html.replace(/^(\$?[a-zA-Z_][a-zA-Z0-9_]*)\s*(=)/gm, '<span class="text-teal-500 dark:text-teal-400 font-semibold">$1</span> $2');
+      // Preserve the original spacing by capturing it
+      html = html.replace(/^(\$?[a-zA-Z_][a-zA-Z0-9_]*)(\s*)(=)/gm, '<span class="text-teal-500 dark:text-teal-400 font-semibold">$1</span>$2$3');
       
       // Currency Highlighting (Purple)
       // Highlight common currency codes (case insensitive)

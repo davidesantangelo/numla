@@ -323,6 +323,17 @@ export class Calculator {
 
             // Preprocess for Natural Language Math
             let processed = this._preprocess(trimmed);
+            
+            // Check if this is a percentage assignment (e.g., "v2 = 5%")
+            const percentAssignMatch = trimmed.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(\d+(?:\.\d+)?)\s*%\s*$/);
+            if (percentAssignMatch) {
+                const varName = percentAssignMatch[1];
+                const percentValue = parseFloat(percentAssignMatch[2]);
+                // Store as a special percentage object
+                this.scope[varName] = { _isPercent: true, value: percentValue / 100, display: percentValue };
+                results.push(this._formatResult({ _isPercent: true, display: percentValue }));
+                return;
+            }
 
             try {
                 // Replace unicode math symbols with standard operators
@@ -335,6 +346,9 @@ export class Calculator {
                 processed = processed.replace(/(\d)\.(\d{3})(?=[.\s\D]|$)/g, '$1$2');
                 // Then, replace decimal comma with dot (0,75 -> 0.75)
                 processed = processed.replace(/(\d),(\d)/g, '$1.$2');
+                
+                // Handle mixed currency/percentage operations
+                processed = this._handleMixedPercentageOps(processed);
 
                 // Check if this line has "in CURRENCY" pattern
                 const inCurrencyMatch = trimmed.match(/\s+in\s+([A-Z]{3})\s*$/i);
@@ -459,6 +473,11 @@ export class Calculator {
         // Convert $VAR_NAME to _VAR_NAME for mathjs compatibility
         // Must be done BEFORE currency symbol handling
         text = text.replace(/\$([A-Z_][A-Z0-9_]*)/gi, '_$1');
+        
+        // Handle simple variable assignments (without $ prefix)
+        // e.g., "t1 = $10" or "myVar = 5%"
+        // This stores the variable in the scope for later use
+        // We need to ensure variable names don't conflict with math functions or units
 
         // Handle Currency + Scale combinations FIRST (e.g., "$2k" -> "2000 USD")
         text = text.replace(/\$(\d+(?:\.\d+)?)\s*k\b/gi, (_, num) => String(parseFloat(num) * 1000) + ' USD');
@@ -753,6 +772,12 @@ export class Calculator {
         
         let formatted = '';
         
+        // Handle percentage results
+        if (result && result._isPercent) {
+            formatted = `${result.display} %`;
+            return `<span class="text-blue-600 dark:text-blue-400 font-medium">${formatted}</span>`;
+        }
+        
         // Handle timezone results
         if (result && result.type === 'time') {
             const options = {
@@ -967,6 +992,27 @@ export class Calculator {
             default:
                 return num;
         }
+    }
+    
+    _handleMixedPercentageOps(text) {
+        // Check for pattern: (something) - varName or something - varName
+        // where varName is a percentage variable in scope
+        // Transform: expr - percentVar  =>  expr * (1 - percentVar.value)
+        // Transform: expr + percentVar  =>  expr * (1 + percentVar.value)
+        
+        for (const [varName, varValue] of Object.entries(this.scope)) {
+            if (varValue && varValue._isPercent) {
+                // Pattern: something - varName (where varName is a percent variable)
+                const subPattern = new RegExp(`(.+?)\\s*-\\s*${varName}\\b(?!\\s*[*\\/])`, 'g');
+                text = text.replace(subPattern, `($1) * (1 - ${varValue.value})`);
+                
+                // Pattern: something + varName (where varName is a percent variable)
+                const addPattern = new RegExp(`(.+?)\\s*\\+\\s*${varName}\\b(?!\\s*[*\\/])`, 'g');
+                text = text.replace(addPattern, `($1) * (1 + ${varValue.value})`);
+            }
+        }
+        
+        return text;
     }
 }
 

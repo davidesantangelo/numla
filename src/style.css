@@ -111,3 +111,10 @@ body {
 .result-item:active {
   animation: copyPulse 0.15s ease-out;
 }
+
+/* Ensure results display matches editor exactly */
+#results-display {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}

@@ -646,7 +646,7 @@ price + tax`;
           // Wrap the result span in a clickable container with beautiful styling
           const clickableResult = r.replace(
               /<span class="([^"]*)">/,
-              `<span class="$1 result-item cursor-pointer rounded-md px-2.5 py-1 -my-0.5 inline-block transition-all duration-200 ease-out hover:bg-zinc-200/60 dark:hover:bg-zinc-700/50 hover:shadow-sm active:scale-95" data-value="${this._escapeHtml(plainValue)}" title="Click to copy">`
+              `<span class="$1 result-item cursor-pointer rounded-md px-1.5 inline-block transition-all duration-200 ease-out hover:bg-zinc-200/60 dark:hover:bg-zinc-700/50 hover:shadow-sm active:scale-95" data-value="${this._escapeHtml(plainValue)}" title="Click to copy">`
           );
           return `<div>${clickableResult}</div>`;
       }).join('');

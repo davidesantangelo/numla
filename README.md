@@ -1,3 +1,5 @@
+[![Netlify Status](https://api.netlify.com/api/v1/badges/e0f9d5bd-a1b4-4b8e-89cb-b45c7d6c87a5/deploy-status)](https://app.netlify.com/projects/numla/deploys)
+
 # Numla
 
 **The notepad that thinks in numbers.**

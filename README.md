@@ -144,6 +144,81 @@ prev + 20%                    → $ 720
 | `avg` / `mean`  | Average of lines above                    |
 | `prev`          | Result from previous line                 |
 
+### Math Functions (powered by [math.js](https://mathjs.org))
+
+#### Statistics
+| Function | Example | Result |
+| -------- | ------- | ------ |
+| `mean(a, b, c)` | `mean(2, 4, 6)` | 4 |
+| `median(a, b, c)` | `median(1, 3, 5, 7)` | 4 |
+| `std(a, b, c)` | `std(2, 4, 4, 4, 5, 5, 7, 9)` | 2 |
+| `variance(a, b, c)` | `variance(2, 4, 6)` | 4 |
+| `min(a, b, c)` | `min(3, 1, 4)` | 1 |
+| `max(a, b, c)` | `max(3, 1, 4)` | 4 |
+| `mode(a, b, c)` | `mode(1, 2, 2, 3)` | 2 |
+| `sum(a, b, c)` | `sum(1, 2, 3, 4)` | 10 |
+
+#### Combinatorics & Number Theory
+| Function | Example | Result |
+| -------- | ------- | ------ |
+| `factorial(n)` or `n!` | `5!` | 120 |
+| `combinations(n, k)` | `combinations(5, 2)` | 10 |
+| `permutations(n, k)` | `permutations(5, 2)` | 20 |
+| `gcd(a, b)` | `gcd(12, 18)` | 6 |
+| `lcm(a, b)` | `lcm(4, 6)` | 12 |
+| `isPrime(n)` | `isPrime(17)` | true |
+
+#### Roots & Powers
+| Function | Example | Result |
+| -------- | ------- | ------ |
+| `sqrt(x)` | `sqrt(16)` | 4 |
+| `cbrt(x)` | `cbrt(27)` | 3 |
+| `nthRoot(x, n)` | `nthRoot(16, 4)` | 2 |
+| `pow(x, y)` or `x^y` | `2^10` | 1024 |
+| `exp(x)` | `exp(1)` | 2.718... |
+
+#### Logarithms
+| Function | Example | Result |
+| -------- | ------- | ------ |
+| `log(x)` | `log(e)` | 1 |
+| `log10(x)` | `log10(100)` | 2 |
+| `log2(x)` | `log2(8)` | 3 |
+| `log(x, base)` | `log(8, 2)` | 3 |
+
+#### Trigonometry
+| Function | Example | Result |
+| -------- | ------- | ------ |
+| `sin(x)` | `sin(pi/2)` | 1 |
+| `cos(x)` | `cos(0)` | 1 |
+| `tan(x)` | `tan(pi/4)` | 1 |
+| `asin(x)` | `asin(1)` | 1.57... |
+| `acos(x)` | `acos(0)` | 1.57... |
+| `atan(x)` | `atan(1)` | 0.785... |
+
+#### Rounding
+| Function | Example | Result |
+| -------- | ------- | ------ |
+| `round(x)` | `round(3.7)` | 4 |
+| `floor(x)` | `floor(3.7)` | 3 |
+| `ceil(x)` | `ceil(3.2)` | 4 |
+| `abs(x)` | `abs(-5)` | 5 |
+| `sign(x)` | `sign(-5)` | -1 |
+
+#### Random
+| Function | Example | Description |
+| -------- | ------- | ----------- |
+| `random()` | `random()` | Random between 0-1 |
+| `random(min, max)` | `random(1, 10)` | Random between min-max |
+| `randomInt(min, max)` | `randomInt(1, 100)` | Random integer |
+
+#### Constants
+| Constant | Value | Description |
+| -------- | ----- | ----------- |
+| `pi` | 3.14159... | π (ratio of circumference to diameter) |
+| `e` | 2.71828... | Euler's number |
+| `phi` | 1.61803... | Golden ratio |
+| `tau` | 6.28318... | τ = 2π |
+
 ### Comments
 
 ```

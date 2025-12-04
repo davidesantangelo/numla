@@ -741,4 +741,273 @@ describe('Advanced Calculator Tests', () => {
             expect(result).toBe('$MY_VAR   =   2000');
         });
     });
+
+    // ========== MATHJS ADVANCED FUNCTIONS ==========
+    describe('Math.js Advanced Functions', () => {
+        // Statistics
+        describe('Statistics Functions', () => {
+            it('should calculate median', () => {
+                const results = calc.evaluate('median(1, 3, 5, 7)');
+                expect(results[0]).toContain('4');
+            });
+
+            it('should calculate standard deviation', () => {
+                const results = calc.evaluate('std(2, 4, 4, 4, 5, 5, 7, 9)');
+                expect(results[0]).toMatch(/2[,.]1/); // ~2.138
+            });
+
+            it('should calculate variance', () => {
+                const results = calc.evaluate('variance(2, 4, 6)');
+                expect(results[0]).toContain('4');
+            });
+
+            it('should find min value', () => {
+                const results = calc.evaluate('min(3, 1, 4, 1, 5, 9)');
+                expect(results[0]).toContain('1');
+            });
+
+            it('should find max value', () => {
+                const results = calc.evaluate('max(3, 1, 4, 1, 5, 9)');
+                expect(results[0]).toContain('9');
+            });
+
+            it('should calculate mode', () => {
+                const results = calc.evaluate('mode(1, 2, 2, 3)');
+                expect(results[0]).toContain('2');
+            });
+        });
+
+        // Combinatorics & Number Theory
+        describe('Combinatorics & Number Theory', () => {
+            it('should calculate factorial', () => {
+                const results = calc.evaluate('5!');
+                expect(results[0]).toContain('120');
+            });
+
+            it('should calculate factorial with function', () => {
+                const results = calc.evaluate('factorial(5)');
+                expect(results[0]).toContain('120');
+            });
+
+            it('should calculate combinations', () => {
+                const results = calc.evaluate('combinations(5, 2)');
+                expect(results[0]).toContain('10');
+            });
+
+            it('should calculate permutations', () => {
+                const results = calc.evaluate('permutations(5, 2)');
+                expect(results[0]).toContain('20');
+            });
+
+            it('should calculate GCD', () => {
+                const results = calc.evaluate('gcd(12, 18)');
+                expect(results[0]).toContain('6');
+            });
+
+            it('should calculate LCM', () => {
+                const results = calc.evaluate('lcm(4, 6)');
+                expect(results[0]).toContain('12');
+            });
+
+            it('should check if number is prime', () => {
+                const results = calc.evaluate('isPrime(17)');
+                expect(results[0]).toContain('true');
+            });
+
+            it('should check if number is not prime', () => {
+                const results = calc.evaluate('isPrime(15)');
+                expect(results[0]).toContain('false');
+            });
+        });
+
+        // Roots & Powers
+        describe('Roots & Powers', () => {
+            it('should calculate square root', () => {
+                const results = calc.evaluate('sqrt(16)');
+                expect(results[0]).toContain('4');
+            });
+
+            it('should calculate cube root', () => {
+                const results = calc.evaluate('cbrt(27)');
+                expect(results[0]).toContain('3');
+            });
+
+            it('should calculate nth root', () => {
+                const results = calc.evaluate('nthRoot(16, 4)');
+                expect(results[0]).toContain('2');
+            });
+
+            it('should calculate power with ^', () => {
+                const results = calc.evaluate('2^10');
+                expect(results[0]).toMatch(/1[.,]?024/);
+            });
+
+            it('should calculate power with pow', () => {
+                const results = calc.evaluate('pow(2, 10)');
+                expect(results[0]).toMatch(/1[.,]?024/);
+            });
+
+            it('should calculate exponential', () => {
+                const results = calc.evaluate('exp(1)');
+                expect(results[0]).toMatch(/2[,.]7/);
+            });
+        });
+
+        // Logarithms
+        describe('Logarithms', () => {
+            it('should calculate natural log', () => {
+                const results = calc.evaluate('log(e)');
+                expect(results[0]).toContain('1');
+            });
+
+            it('should calculate log base 10', () => {
+                const results = calc.evaluate('log10(100)');
+                expect(results[0]).toContain('2');
+            });
+
+            it('should calculate log base 2', () => {
+                const results = calc.evaluate('log2(8)');
+                expect(results[0]).toContain('3');
+            });
+
+            it('should calculate log with custom base', () => {
+                const results = calc.evaluate('log(8, 2)');
+                expect(results[0]).toContain('3');
+            });
+        });
+
+        // Trigonometry
+        describe('Trigonometry', () => {
+            it('should calculate sin(pi/2)', () => {
+                const results = calc.evaluate('sin(pi/2)');
+                expect(results[0]).toContain('1');
+            });
+
+            it('should calculate cos(0)', () => {
+                const results = calc.evaluate('cos(0)');
+                expect(results[0]).toContain('1');
+            });
+
+            it('should calculate tan(pi/4)', () => {
+                const results = calc.evaluate('tan(pi/4)');
+                expect(results[0]).toMatch(/1|0[,.]99/); // ~1
+            });
+
+            it('should calculate sin with degrees', () => {
+                const results = calc.evaluate('sin(90 deg)');
+                expect(results[0]).toContain('1');
+            });
+
+            it('should calculate cos with degrees', () => {
+                const results = calc.evaluate('cos(180 deg)');
+                expect(results[0]).toContain('-1');
+            });
+        });
+
+        // Rounding
+        describe('Rounding Functions', () => {
+            it('should round to nearest integer', () => {
+                const results = calc.evaluate('round(3.7)');
+                expect(results[0]).toContain('4');
+            });
+
+            it('should floor a number', () => {
+                const results = calc.evaluate('floor(3.7)');
+                expect(results[0]).toContain('3');
+            });
+
+            it('should ceil a number', () => {
+                const results = calc.evaluate('ceil(3.2)');
+                expect(results[0]).toContain('4');
+            });
+
+            it('should get absolute value', () => {
+                const results = calc.evaluate('abs(-5)');
+                expect(results[0]).toContain('5');
+            });
+
+            it('should get sign', () => {
+                const results = calc.evaluate('sign(-5)');
+                expect(results[0]).toContain('-1');
+            });
+        });
+
+        // Constants
+        describe('Mathematical Constants', () => {
+            it('should use pi constant', () => {
+                const results = calc.evaluate('pi');
+                expect(results[0]).toMatch(/3[,.]14/);
+            });
+
+            it('should use e constant', () => {
+                const results = calc.evaluate('e');
+                expect(results[0]).toMatch(/2[,.]7/);
+            });
+
+            it('should use phi (golden ratio)', () => {
+                const results = calc.evaluate('phi');
+                expect(results[0]).toMatch(/1[,.]6/);
+            });
+
+            it('should use tau (2*pi)', () => {
+                const results = calc.evaluate('tau');
+                expect(results[0]).toMatch(/6[,.]28/);
+            });
+        });
+
+        // Random functions (just check they return a result)
+        describe('Random Functions', () => {
+            it('should generate random number', () => {
+                const results = calc.evaluate('random()');
+                expect(results[0]).not.toBe('');
+            });
+
+            it('should generate random number in range', () => {
+                const results = calc.evaluate('random(1, 10)');
+                expect(results[0]).not.toBe('');
+            });
+
+            it('should generate random integer', () => {
+                const results = calc.evaluate('randomInt(1, 100)');
+                expect(results[0]).not.toBe('');
+            });
+        });
+
+        // Complex expressions
+        describe('Complex Mathematical Expressions', () => {
+            it('should calculate quadratic formula parts', () => {
+                // x = (-b + sqrt(b^2 - 4ac)) / 2a for x^2 - 5x + 6 = 0
+                const results = calc.evaluate('(5 + sqrt(25 - 24)) / 2');
+                expect(results[0]).toContain('3');
+            });
+
+            it('should calculate compound interest', () => {
+                // A = P(1 + r/n)^(nt) for P=1000, r=0.05, n=12, t=1
+                const results = calc.evaluate('1000 * (1 + 0.05/12)^12');
+                expect(results[0]).toMatch(/1[.,]?051/);
+            });
+
+            it('should calculate circle area', () => {
+                const results = calc.evaluate('pi * 5^2');
+                expect(results[0]).toMatch(/78[,.]5/);
+            });
+
+            it('should calculate sphere volume with parentheses', () => {
+                // V = 4/3 * pi * r^3, using explicit multiplication
+                const results = calc.evaluate('1.333333 * pi * 27');
+                expect(results[0]).toMatch(/113/);
+            });
+
+            it('should calculate distance formula', () => {
+                // distance between (0,0) and (3,4)
+                const results = calc.evaluate('sqrt(3^2 + 4^2)');
+                expect(results[0]).toContain('5');
+            });
+
+            it('should calculate hypotenuse using hypot', () => {
+                const results = calc.evaluate('hypot(3, 4)');
+                expect(results[0]).toContain('5');
+            });
+        });
+    });
 });

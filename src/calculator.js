@@ -557,6 +557,18 @@ export class Calculator {
         // sqm = square meters
         text = text.replace(/\bsqm\b/gi, 'm^2');
 
+        // Handle "X CURRENCY1 CURRENCY2" pattern (e.g., "1 eur usd" -> "1 EUR to USD")
+        // This prevents mathjs from interpreting it as unit multiplication (EUR * USD = USD²)
+        const currencyCodes = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD', 'NZD', 'CNY', 'HKD', 'SGD', 'SEK', 'NOK', 'DKK', 'KRW', 'INR', 'BRL', 'MXN', 'ZAR', 'RUB', 'TRY', 'PLN', 'CZK', 'HUF', 'ILS', 'THB', 'MYR', 'PHP', 'IDR', 'TWD', 'AED', 'SAR'];
+        const currencyPattern = new RegExp(`^(\\d+(?:\\.\\d+)?)\\s+(${currencyCodes.join('|')})\\s+(${currencyCodes.join('|')})$`, 'i');
+        const currencyMatch = text.match(currencyPattern);
+        if (currencyMatch) {
+            const amount = currencyMatch[1];
+            const fromCurrency = currencyMatch[2].toUpperCase();
+            const toCurrency = currencyMatch[3].toUpperCase();
+            text = `${amount} ${fromCurrency} to ${toCurrency}`;
+        }
+
         // Handle "in CURRENCY" operations
         // If left side is a number (not a unit), treat it as already being in that currency
         // "(5600 + 4%) in EUR" -> "(5600 + 4%) EUR" (attach currency unit)

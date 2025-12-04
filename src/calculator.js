@@ -106,19 +106,26 @@ function initBasicCurrencies() {
 // Initialize CSS units
 function initCSSUnits() {
     try {
-        // px is base unit for CSS
+        // Create a CSS-specific point unit (csspt) as base, then define conversions
+        // This keeps CSS units separate from mathjs's typographic pt (which is linked to length units)
+        // At 96 DPI: 1 inch = 96 px = 72 pt
+        // So: 1 pt = 96/72 px = 4/3 px ≈ 1.333 px
+        // And: 1 px = 72/96 pt = 3/4 pt = 0.75 pt
+        
+        // px is our CSS base unit
         if (!math.Unit.isValuelessUnit('px')) {
             math.createUnit('px', { aliases: ['pixel', 'pixels'] });
         }
-        // pt = 1/72 inch, and at 96 PPI, 1 inch = 96px, so 1pt = 96/72 px = 1.333px
-        if (!math.Unit.isValuelessUnit('pt')) {
-            math.createUnit('pt', { definition: '1.333333333 px', aliases: ['point', 'points'] });
+        // Define csspt based on px (not the built-in pt which is linked to inches)
+        // 1 csspt = 1.333... px (since 1 pt = 96/72 px at standard resolution)
+        if (!math.Unit.isValuelessUnit('csspt')) {
+            math.createUnit('csspt', { definition: '1.333333333333 px', aliases: ['point', 'points'] });
         }
-        // em defaults to 16px
+        // em defaults to 16px (standard browser default font size)
         if (!math.Unit.isValuelessUnit('em')) {
             math.createUnit('em', { definition: '16 px', aliases: ['ems'] });
         }
-        // rem same as em by default
+        // rem same as em by default (root em)
         if (!math.Unit.isValuelessUnit('rem')) {
             math.createUnit('rem', { definition: '16 px', aliases: ['rems'] });
         }
@@ -557,6 +564,15 @@ export class Calculator {
         // sqm = square meters
         text = text.replace(/\bsqm\b/gi, 'm^2');
 
+        // Handle CSS pt (points) to csspt conversion
+        // When pt is used in context with CSS units (px, em, rem), convert it to csspt
+        // This keeps CSS typographic points separate from mathjs's built-in pt (which is linked to inches)
+        // Pattern: "X pt to/in px|em|rem" or "X px|em|rem to/in pt"
+        if (/\b(px|em|rem)\b/i.test(text) && /\bpt\b/i.test(text)) {
+            // Replace standalone 'pt' with 'csspt' when used with CSS units
+            text = text.replace(/\bpt\b/gi, 'csspt');
+        }
+
         // Handle "X CURRENCY1 CURRENCY2" pattern (e.g., "1 eur usd" -> "1 EUR to USD")
         // This prevents mathjs from interpreting it as unit multiplication (EUR * USD = USD²)
         const currencyCodes = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD', 'NZD', 'CNY', 'HKD', 'SGD', 'SEK', 'NOK', 'DKK', 'KRW', 'INR', 'BRL', 'MXN', 'ZAR', 'RUB', 'TRY', 'PLN', 'CZK', 'HUF', 'ILS', 'THB', 'MYR', 'PHP', 'IDR', 'TWD', 'AED', 'SAR'];
@@ -697,6 +713,13 @@ export class Calculator {
     _evaluateDate(text) {
         // Check for date math: "Date + Duration" or "Date - Duration" or just "Date"
         // We use chrono to parse the date part.
+        
+        // Skip if this looks like a unit conversion pattern (e.g., "12 pt to px", "16 px in pt")
+        // This prevents chrono from interpreting "12 pt" as a date
+        const unitConversionPattern = /\b\d+\s*(px|pt|em|rem)\s+(to|in)\s+(px|pt|em|rem)\b/i;
+        if (unitConversionPattern.test(text)) {
+            return null;
+        }
         
         // Handle "today" keyword explicitly
         const lowerText = text.toLowerCase().trim();
@@ -947,6 +970,8 @@ export class Calculator {
                 formatted = formatted.replace(/\^3/g, '³');
                 formatted = formatted.replace(/\binch\b/g, '″');
                 formatted = formatted.replace(/\bdeg\b/g, '°');
+                // Convert csspt back to pt for display
+                formatted = formatted.replace(/\bcsspt\b/g, 'pt');
             }
         } else if (result instanceof Date) {
             formatted = this._formatDate(result);

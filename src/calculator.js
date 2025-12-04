@@ -4,6 +4,98 @@ import { currencyService } from './currencyService.js';
 
 const math = create(all);
 
+// ============================================================================
+// PRE-COMPILED REGEX PATTERNS (Performance optimization)
+// ============================================================================
+
+// Format modifiers pattern
+const FORMAT_MODIFIER_REGEX = /\s+in\s+(hex|bin|oct|sci|scientific|binary|octal|hexadecimal)\s*$/i;
+
+// Currency patterns
+const IN_CURRENCY_REGEX = /\s+in\s+([A-Z]{3})\s*$/i;
+const CURRENCY_CODES = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD', 'NZD', 'CNY', 'HKD', 'SGD', 'SEK', 'NOK', 'DKK', 'KRW', 'INR', 'BRL', 'MXN', 'ZAR', 'RUB', 'TRY', 'PLN', 'CZK', 'HUF', 'ILS', 'THB', 'MYR', 'PHP', 'IDR', 'TWD', 'AED', 'SAR'];
+const CURRENCY_DOUBLE_PATTERN = new RegExp(`^(\\d+(?:\\.\\d+)?)\\s+(${CURRENCY_CODES.join('|')})\\s+(${CURRENCY_CODES.join('|')})$`, 'i');
+
+// Preprocess patterns
+const LABEL_PREFIX_REGEX = /^[a-zA-Z][a-zA-Z0-9\s]*:\s*/;
+const VARIABLE_REGEX = /\$([A-Z_][A-Z0-9_]*)/gi;
+const PERCENT_ASSIGN_REGEX = /^([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(\d+(?:\.\d+)?)\s*%\s*$/;
+
+// Scale patterns
+const SCALE_USD_K = /\$(\d+(?:\.\d+)?)\s*k\b/gi;
+const SCALE_USD_M = /\$(\d+(?:\.\d+)?)\s*M\b/g;
+const SCALE_USD_B = /\$(\d+(?:\.\d+)?)\s*(?:B|billion)\b/gi;
+const SCALE_EUR_K = /€(\d+(?:\.\d+)?)\s*k\b/gi;
+const SCALE_EUR_M = /€(\d+(?:\.\d+)?)\s*M\b/g;
+const SCALE_GBP_K = /£(\d+(?:\.\d+)?)\s*k\b/gi;
+const SCALE_GBP_M = /£(\d+(?:\.\d+)?)\s*M\b/g;
+const SCALE_K = /(\d+(?:\.\d+)?)\s*k\b/gi;
+const SCALE_M = /(\d+(?:\.\d+)?)\s*M\b/g;
+const SCALE_B = /(\d+(?:\.\d+)?)\s*(?:B|billion|billions)\b/gi;
+const SCALE_THOUSAND = /(\d+(?:\.\d+)?)\s*(?:thousand|thousands)\b/gi;
+const SCALE_MILLION = /(\d+(?:\.\d+)?)\s*(?:million|millions)\b/gi;
+
+// Currency symbol patterns
+const CURRENCY_USD = /\$(\d+(?:[.,]\d+)?)/g;
+const CURRENCY_EUR = /€(\d+(?:[.,]\d+)?)/g;
+const CURRENCY_GBP = /£(\d+(?:[.,]\d+)?)/g;
+
+// Unit conversion patterns
+const UNIT_CONVERSION_REGEX = /\b\d+\s*(px|pt|em|rem)\s+(to|in)\s+(px|pt|em|rem)\b/i;
+const CU_UNIT_REGEX = /\b(?:cu|cb)\s*(m|cm|mm|km|ft|feet|foot|in|inch|inches|yd|yard|yards|mi|mile|miles)\b/gi;
+const CUBIC_UNIT_REGEX = /\bcubic\s+(meter|meters|metre|metres|centimeter|centimeters|millimeter|millimeters|kilometer|kilometers|foot|feet|inch|inches|yard|yards|mile|miles|m|cm|mm|km|ft|in|yd|mi)\b/gi;
+const SQ_UNIT_REGEX = /\b(?:sq)\s*(m|cm|mm|km|ft|feet|foot|in|inch|inches|yd|yard|yards|mi|mile|miles)\b/gi;
+const SQUARE_UNIT_REGEX = /\bsquare\s+(meter|meters|metre|metres|centimeter|centimeters|millimeter|millimeters|kilometer|kilometers|foot|feet|inch|inches|yard|yards|mile|miles|m|cm|mm|km|ft|in|yd|mi)\b/gi;
+
+// Number format patterns
+const THOUSANDS_SEP_REGEX = /(\d)\.(\d{3})(?=[.\s\D]|$)/g;
+const DECIMAL_COMMA_REGEX = /(\d),(\d)/g;
+
+// Percentage patterns
+const PERCENT_OF_WHAT_IS = /(\d+(?:\.\d+)?%)\s+of\s+what\s+is\s+(.+)/i;
+const PERCENT_ON_WHAT_IS = /(\d+(?:\.\d+)?)%\s+on\s+what\s+is\s+(.+)/i;
+const PERCENT_OFF_WHAT_IS = /(\d+(?:\.\d+)?)%\s+off\s+what\s+is\s+(.+)/i;
+const PERCENT_ON = /(\d+(?:\.\d+)?)%\s+on\s+(.+)/i;
+const PERCENT_OFF = /(\d+(?:\.\d+)?)%\s+off\s+(.+)/i;
+const PERCENT_AS_OF = /(.+?)\s+as\s+a?\s*%\s+of\s+(.+)/i;
+const PERCENT_AS_ON = /(.+?)\s+as\s+a?\s*%\s+on\s+(.+)/i;
+const PERCENT_AS_OFF = /(.+?)\s+as\s+a?\s*%\s+off\s+(.+)/i;
+const PERCENT_OF = /(\d+(?:\.\d+)?%)\s+of\s+(.+)/i;
+const PERCENT_TRAILING = /(\d+%)\s+(?:discount|fee|tax|tip|markup|margin|bonus|interest|rate|increase|decrease|reduction|savings)\b/gi;
+
+// Assignment pattern
+const SIMPLE_ASSIGNMENT_REGEX = /^[\$_a-zA-Z][\$_a-zA-Z0-9]*\s*=\s*[\d.,\s]+$/;
+const TRAILING_RESULT_REGEX = /\s*=\s*[\d.,\s]+[a-zA-Z%€$£¥]*$/;
+
+// Timezone patterns
+const LOCATION_TIME_REGEX = /^(.+?)\s+time$/;
+const TIME_IN_REGEX = /^(?:time|now)\s+in\s+(.+)$/;
+const TIME_CONVERSION_REGEX = /^(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)\s+(\w+)\s+in\s+(.+)$/i;
+const TIME_PARSE_REGEX = /^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i;
+
+// ============================================================================
+// CACHED FORMATTERS (Performance optimization)
+// ============================================================================
+
+const NUMBER_FORMATTER = new Intl.NumberFormat('it-IT', { 
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+    useGrouping: true 
+});
+
+const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
+    month: 'numeric',
+    day: 'numeric',
+    year: '2-digit'
+});
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const MAX_INPUT_LENGTH = 100000;
+const MAX_LINES = 1000;
+
 // Initialize currency service and configure units
 let currenciesConfigured = false;
 let configurePromise = null;
@@ -244,7 +336,6 @@ export class Calculator {
         }
         
         // Limit input size to prevent performance issues
-        const MAX_INPUT_LENGTH = 100000;
         if (text.length > MAX_INPUT_LENGTH) {
             text = text.substring(0, MAX_INPUT_LENGTH);
         }
@@ -252,7 +343,6 @@ export class Calculator {
         const lines = text.split('\n');
         
         // Limit number of lines to prevent performance issues
-        const MAX_LINES = 1000;
         if (lines.length > MAX_LINES) {
             lines.length = MAX_LINES;
         }
@@ -313,10 +403,10 @@ export class Calculator {
             // Check for format modifiers BEFORE date parsing (in hex, in bin, in oct, in sci)
             // This prevents "64 in oct" being interpreted as a date (64 in October)
             let outputFormat = null;
-            const formatMatch = trimmed.match(/\s+in\s+(hex|bin|oct|sci|scientific|binary|octal|hexadecimal)\s*$/i);
+            const formatMatch = trimmed.match(FORMAT_MODIFIER_REGEX);
             if (formatMatch) {
                 outputFormat = formatMatch[1].toLowerCase();
-                trimmed = trimmed.replace(/\s+in\s+(hex|bin|oct|sci|scientific|binary|octal|hexadecimal)\s*$/i, '');
+                trimmed = trimmed.replace(FORMAT_MODIFIER_REGEX, '');
             }
 
             // Try Date Math only if not a format conversion
@@ -332,7 +422,7 @@ export class Calculator {
             let processed = this._preprocess(trimmed);
             
             // Check if this is a percentage assignment (e.g., "v2 = 5%")
-            const percentAssignMatch = trimmed.match(/^([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*(\d+(?:\.\d+)?)\s*%\s*$/);
+            const percentAssignMatch = trimmed.match(PERCENT_ASSIGN_REGEX);
             if (percentAssignMatch) {
                 const varName = percentAssignMatch[1];
                 const percentValue = parseFloat(percentAssignMatch[2]);
@@ -350,9 +440,9 @@ export class Calculator {
                 
                 // Formatting for mathjs - handle European number format
                 // First, handle thousands separator (1.000.000 -> 1000000)
-                processed = processed.replace(/(\d)\.(\d{3})(?=[.\s\D]|$)/g, '$1$2');
+                processed = processed.replace(THOUSANDS_SEP_REGEX, '$1$2');
                 // Then, replace decimal comma with dot (0,75 -> 0.75)
-                processed = processed.replace(/(\d),(\d)/g, '$1.$2');
+                processed = processed.replace(DECIMAL_COMMA_REGEX, '$1.$2');
                 
                 // Handle mixed currency/percentage operations
                 processed = this._handleMixedPercentageOps(processed);
@@ -448,15 +538,13 @@ export class Calculator {
         // We SHOULD remove: "5 + 3 = 8" (result appended to expression)
         
         // Check if this is a simple assignment (variable = value with no operators in the value)
-        const simpleAssignmentRegex = /^[\$_a-zA-Z][\$_a-zA-Z0-9]*\s*=\s*[\d.,\s]+$/;
-        if (simpleAssignmentRegex.test(text)) {
+        if (SIMPLE_ASSIGNMENT_REGEX.test(text)) {
             // This is a simple assignment like "$VAR = 2000", don't strip
             return text;
         }
         
         // Only strip trailing " = number" if there's already math in the expression
-        const trailingResultRegex = /\s*=\s*[\d.,\s]+[a-zA-Z%€$£¥]*$/;
-        const match = text.match(trailingResultRegex);
+        const match = text.match(TRAILING_RESULT_REGEX);
         if (match) {
             const partBefore = text.substring(0, match.index);
             // Only strip if the part before contains actual math operators
@@ -474,12 +562,12 @@ export class Calculator {
         // Remove "Label: " prefix (e.g. "Price: $10", "Line 1: $10")
         // Match: word characters, numbers, spaces followed by colon and space
         // Be careful not to match time like "10:30"
-        text = text.replace(/^[a-zA-Z][a-zA-Z0-9\s]*:\s*/, '');
+        text = text.replace(LABEL_PREFIX_REGEX, '');
 
         // Handle $VARIABLE_NAME style variables (Numi-style)
         // Convert $VAR_NAME to _VAR_NAME for mathjs compatibility
         // Must be done BEFORE currency symbol handling
-        text = text.replace(/\$([A-Z_][A-Z0-9_]*)/gi, '_$1');
+        text = text.replace(VARIABLE_REGEX, '_$1');
         
         // Handle simple variable assignments (without $ prefix)
         // e.g., "t1 = $10" or "myVar = 5%"
@@ -487,28 +575,28 @@ export class Calculator {
         // We need to ensure variable names don't conflict with math functions or units
 
         // Handle Currency + Scale combinations FIRST (e.g., "$2k" -> "2000 USD")
-        text = text.replace(/\$(\d+(?:\.\d+)?)\s*k\b/gi, (_, num) => String(parseFloat(num) * 1000) + ' USD');
-        text = text.replace(/\$(\d+(?:\.\d+)?)\s*M\b/g, (_, num) => String(parseFloat(num) * 1000000) + ' USD');
-        text = text.replace(/\$(\d+(?:\.\d+)?)\s*(?:B|billion)\b/gi, (_, num) => String(parseFloat(num) * 1000000000) + ' USD');
-        text = text.replace(/€(\d+(?:\.\d+)?)\s*k\b/gi, (_, num) => String(parseFloat(num) * 1000) + ' EUR');
-        text = text.replace(/€(\d+(?:\.\d+)?)\s*M\b/g, (_, num) => String(parseFloat(num) * 1000000) + ' EUR');
-        text = text.replace(/£(\d+(?:\.\d+)?)\s*k\b/gi, (_, num) => String(parseFloat(num) * 1000) + ' GBP');
-        text = text.replace(/£(\d+(?:\.\d+)?)\s*M\b/g, (_, num) => String(parseFloat(num) * 1000000) + ' GBP');
+        text = text.replace(SCALE_USD_K, (_, num) => String(parseFloat(num) * 1000) + ' USD');
+        text = text.replace(SCALE_USD_M, (_, num) => String(parseFloat(num) * 1000000) + ' USD');
+        text = text.replace(SCALE_USD_B, (_, num) => String(parseFloat(num) * 1000000000) + ' USD');
+        text = text.replace(SCALE_EUR_K, (_, num) => String(parseFloat(num) * 1000) + ' EUR');
+        text = text.replace(SCALE_EUR_M, (_, num) => String(parseFloat(num) * 1000000) + ' EUR');
+        text = text.replace(SCALE_GBP_K, (_, num) => String(parseFloat(num) * 1000) + ' GBP');
+        text = text.replace(SCALE_GBP_M, (_, num) => String(parseFloat(num) * 1000000) + ' GBP');
 
         // Handle scales: k (thousands), M (millions), B (billions)
-        text = text.replace(/(\d+(?:\.\d+)?)\s*k\b/gi, (_, num) => String(parseFloat(num) * 1000));
-        text = text.replace(/(\d+(?:\.\d+)?)\s*M\b/g, (_, num) => String(parseFloat(num) * 1000000));
-        text = text.replace(/(\d+(?:\.\d+)?)\s*(?:B|billion|billions)\b/gi, (_, num) => String(parseFloat(num) * 1000000000));
-        text = text.replace(/(\d+(?:\.\d+)?)\s*(?:thousand|thousands)\b/gi, (_, num) => String(parseFloat(num) * 1000));
-        text = text.replace(/(\d+(?:\.\d+)?)\s*(?:million|millions)\b/gi, (_, num) => String(parseFloat(num) * 1000000));
+        text = text.replace(SCALE_K, (_, num) => String(parseFloat(num) * 1000));
+        text = text.replace(SCALE_M, (_, num) => String(parseFloat(num) * 1000000));
+        text = text.replace(SCALE_B, (_, num) => String(parseFloat(num) * 1000000000));
+        text = text.replace(SCALE_THOUSAND, (_, num) => String(parseFloat(num) * 1000));
+        text = text.replace(SCALE_MILLION, (_, num) => String(parseFloat(num) * 1000000));
 
         // Handle Currency Symbols (after scales)
         // "$10" -> "10 USD" (only when $ is followed by a number)
-        text = text.replace(/\$(\d+(?:[.,]\d+)?)/g, '$1 USD');
+        text = text.replace(CURRENCY_USD, '$1 USD');
         // "€10" -> "10 EUR"
-        text = text.replace(/€(\d+(?:[.,]\d+)?)/g, '$1 EUR');
+        text = text.replace(CURRENCY_EUR, '$1 EUR');
         // "£10" -> "10 GBP"
-        text = text.replace(/£(\d+(?:[.,]\d+)?)/g, '$1 GBP');
+        text = text.replace(CURRENCY_GBP, '$1 GBP');
 
         // Handle "tea spoons" -> "teaspoons"
         text = text.replace(/tea\s+spoons/gi, 'teaspoons');
@@ -575,9 +663,7 @@ export class Calculator {
 
         // Handle "X CURRENCY1 CURRENCY2" pattern (e.g., "1 eur usd" -> "1 EUR to USD")
         // This prevents mathjs from interpreting it as unit multiplication (EUR * USD = USD²)
-        const currencyCodes = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD', 'NZD', 'CNY', 'HKD', 'SGD', 'SEK', 'NOK', 'DKK', 'KRW', 'INR', 'BRL', 'MXN', 'ZAR', 'RUB', 'TRY', 'PLN', 'CZK', 'HUF', 'ILS', 'THB', 'MYR', 'PHP', 'IDR', 'TWD', 'AED', 'SAR'];
-        const currencyPattern = new RegExp(`^(\\d+(?:\\.\\d+)?)\\s+(${currencyCodes.join('|')})\\s+(${currencyCodes.join('|')})$`, 'i');
-        const currencyMatch = text.match(currencyPattern);
+        const currencyMatch = text.match(CURRENCY_DOUBLE_PATTERN);
         if (currencyMatch) {
             const amount = currencyMatch[1];
             const fromCurrency = currencyMatch[2].toUpperCase();
@@ -924,12 +1010,8 @@ export class Calculator {
             if (!isFinite(result)) {
                 return result === Infinity ? '∞' : result === -Infinity ? '-∞' : '';
             }
-            // Format the number with separators first
-            const fullFormatted = new Intl.NumberFormat('it-IT', { 
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 2,
-                useGrouping: true 
-            }).format(result);
+            // Format the number with separators first (using cached formatter)
+            const fullFormatted = NUMBER_FORMATTER.format(result);
             
             // If too long (more than ~15 chars), use scientific notation
             if (fullFormatted.length > 15) {
@@ -953,12 +1035,8 @@ export class Calculator {
             
             if (unitName && currencySymbols[unitName]) {
                 const value = result.toNumber(unitName);
-                // Format as currency with Italian number formatting
-                const formattedNumber = new Intl.NumberFormat('it-IT', {
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 2,
-                    useGrouping: true
-                }).format(value);
+                // Format as currency (using cached formatter)
+                const formattedNumber = NUMBER_FORMATTER.format(value);
                 
                 formatted = `${currencySymbols[unitName]} ${formattedNumber}`;
             } else {
@@ -987,12 +1065,8 @@ export class Calculator {
     }
 
     _formatDate(date) {
-        // 8/14/15 format from screenshot
-        return new Intl.DateTimeFormat('en-US', {
-            month: 'numeric',
-            day: 'numeric',
-            year: '2-digit'
-        }).format(date);
+        // 8/14/15 format (using cached formatter)
+        return DATE_FORMATTER.format(date);
     }
 
     _evaluateTimezone(text) {

@@ -1,7 +1,25 @@
 import { Calculator } from './calculator.js';
 
+// ============================================================================
+// PRE-COMPILED REGEX PATTERNS (Performance optimization)
+// ============================================================================
+
 const HIGHLIGHT_CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'SEK', 'NZD', 'KRW', 'SGD', 'NOK', 'MXN', 'INR', 'RUB', 'ZAR', 'TRY', 'BRL', 'TWD', 'DKK', 'PLN', 'THB', 'IDR', 'HUF', 'CZK', 'ILS', 'CLP', 'PHP', 'AED', 'COP', 'SAR', 'MYR', 'RON'];
 const HIGHLIGHT_CURRENCY_REGEX = new RegExp(`\\b(${HIGHLIGHT_CURRENCIES.join('|')})\\b`, 'gi');
+
+// Highlighter patterns
+const COMMENT_LINE_REGEX = /^#(.*$)/gm;
+const VARIABLE_ASSIGN_REGEX = /^(\$?[a-zA-Z_][a-zA-Z0-9_]*)(\s*)(=)/gm;
+
+// HTML escape patterns - using a map for performance
+const HTML_ESCAPE_MAP = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#039;'
+};
+const HTML_ESCAPE_REGEX = /[&<>"']/g;
 
 // Debounce utility function
 export function debounce(func, wait) {
@@ -351,15 +369,12 @@ export const ui = {
       let html = this._escapeHtml(text);
 
       // Yellow Comments Highlighting (# ...)
-      // We use a regex to find lines starting with # and wrap them in a span
       // Use amber-500 for light mode and yellow-300 for dark mode - more visible
-      html = html.replace(/^#(.*$)/gm, '<span class="text-amber-500 dark:text-yellow-300 font-medium">#$1</span>');
+      html = html.replace(COMMENT_LINE_REGEX, '<span class="text-amber-500 dark:text-yellow-300 font-medium">#$1</span>');
       
       // Variable Assignment Highlighting (var = value or $var = value)
-      // Match variable names (with or without $) followed by = and a value
       // Use teal-500 for light mode and teal-400 for dark - more saturated and visible
-      // Preserve the original spacing by capturing it
-      html = html.replace(/^(\$?[a-zA-Z_][a-zA-Z0-9_]*)(\s*)(=)/gm, '<span class="text-teal-500 dark:text-teal-400 font-semibold">$1</span>$2$3');
+      html = html.replace(VARIABLE_ASSIGN_REGEX, '<span class="text-teal-500 dark:text-teal-400 font-semibold">$1</span>$2$3');
       
       // Currency Highlighting (Purple)
       // Highlight common currency codes (case insensitive)
@@ -911,12 +926,8 @@ price + tax`;
   },
 
   _escapeHtml(unsafe) {
-    return unsafe
-         .replace(/&/g, "&amp;")
-         .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;")
-         .replace(/'/g, "&#039;");
+    // Use cached regex and map for performance
+    return unsafe.replace(HTML_ESCAPE_REGEX, char => HTML_ESCAPE_MAP[char]);
  },
 
   _getDisplayTitle(title) {

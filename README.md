@@ -26,7 +26,7 @@ time in Tokyo          → 11:30 PM JST
 5 km to miles          → 3.1 miles
 
 $RATE = 75
-8 hours * $RATE        → $ 600
+8 hours * $RATE        → 600 hours
 ```
 
 ---

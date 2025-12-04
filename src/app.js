@@ -1,5 +1,6 @@
 import { store } from './store.js';
 import { ui, debounce } from './ui.js';
+import { initTour, startTour, resetTour } from './tour.js';
 
 let activeNoteId = null;
 let spotlightIndex = 0;
@@ -22,6 +23,13 @@ const debouncedSave = debounce((noteId, content, timestamp) => {
 
 export function initApp() {
   ui.init();
+  
+  // Set up tour callback for help buttons
+  ui.onStartTour = () => {
+    resetTour(); // Reset to allow re-running
+    startTour();
+  };
+  
   setupEventListeners();
   
   // Load tabs from localStorage
@@ -57,7 +65,13 @@ export function initApp() {
       createNewNote();
     }
   }
+
+  // Initialize the interactive tour for first-time users
+  initTour();
 }
+
+// Export tour functions for manual control
+export { startTour, resetTour };
 
 function openSpotlight() {
   isSpotlightOpen = true;

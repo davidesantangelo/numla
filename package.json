@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "chrono-node": "^2.9.0",
+    "driver.js": "^1.4.0",
     "mathjs": "^15.1.0"
   }
 }

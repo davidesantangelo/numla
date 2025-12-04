@@ -249,3 +249,177 @@ body {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* ====== Driver.js Tour Customization ====== */
+
+.numla-tour-popover {
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+}
+
+.dark .numla-tour-popover {
+  background: #18181b !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+}
+
+.numla-tour-popover .driver-popover-title {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #18181b !important;
+  padding: 16px 16px 8px 16px !important;
+}
+
+.dark .numla-tour-popover .driver-popover-title {
+  color: #fafafa !important;
+}
+
+.numla-tour-popover .driver-popover-description {
+  font-size: 15px !important;
+  color: #52525b !important;
+  padding: 0 16px 16px 16px !important;
+  line-height: 1.6 !important;
+}
+
+.dark .numla-tour-popover .driver-popover-description {
+  color: #a1a1aa !important;
+}
+
+.numla-tour-popover .driver-popover-description code {
+  background: rgba(59, 130, 246, 0.1) !important;
+  color: #3b82f6 !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+}
+
+.dark .numla-tour-popover .driver-popover-description code {
+  background: rgba(96, 165, 250, 0.15) !important;
+  color: #60a5fa !important;
+}
+
+.numla-tour-popover .driver-popover-footer {
+  padding: 8px 12px !important;
+  border-top: 1px solid #e4e4e7 !important;
+  background: #fafafa !important;
+  border-radius: 0 0 12px 12px !important;
+  gap: 8px !important;
+}
+
+.dark .numla-tour-popover .driver-popover-footer {
+  border-top-color: #3f3f46 !important;
+  background: #27272a !important;
+}
+
+.numla-tour-popover .driver-popover-navigation-btns button {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease !important;
+  font-family: inherit !important;
+}
+
+.numla-tour-popover .driver-popover-prev-btn {
+  background: #f4f4f5 !important;
+  color: #18181b !important;
+  border: 1px solid #d4d4d8 !important;
+  font-weight: 600 !important;
+  text-shadow: none !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+.dark .numla-tour-popover .driver-popover-prev-btn {
+  background: #3f3f46 !important;
+  color: #fafafa !important;
+  border-color: #52525b !important;
+}
+
+.numla-tour-popover .driver-popover-prev-btn:hover {
+  background: #e4e4e7 !important;
+  color: #09090b !important;
+}
+
+.dark .numla-tour-popover .driver-popover-prev-btn:hover {
+  background: #52525b !important;
+  color: #ffffff !important;
+}
+
+.numla-tour-popover .driver-popover-next-btn {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 600 !important;
+  text-shadow: none !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+.numla-tour-popover .driver-popover-next-btn:hover {
+  background: #1d4ed8 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35) !important;
+}
+
+.numla-tour-popover .driver-popover-progress-text {
+  font-size: 12px !important;
+  color: #a1a1aa !important;
+}
+
+.dark .numla-tour-popover .driver-popover-progress-text {
+  color: #71717a !important;
+}
+
+.numla-tour-popover .driver-popover-close-btn {
+  color: #a1a1aa !important;
+  width: 28px !important;
+  height: 28px !important;
+  font-size: 18px !important;
+}
+
+.numla-tour-popover .driver-popover-close-btn:hover {
+  color: #18181b !important;
+}
+
+.dark .numla-tour-popover .driver-popover-close-btn:hover {
+  color: #fafafa !important;
+}
+
+/* Driver.js arrow customization */
+.numla-tour-popover .driver-popover-arrow-side-left,
+.numla-tour-popover .driver-popover-arrow-side-right,
+.numla-tour-popover .driver-popover-arrow-side-top,
+.numla-tour-popover .driver-popover-arrow-side-bottom {
+  background: white !important;
+}
+
+.dark .numla-tour-popover .driver-popover-arrow-side-left,
+.dark .numla-tour-popover .driver-popover-arrow-side-right,
+.dark .numla-tour-popover .driver-popover-arrow-side-top,
+.dark .numla-tour-popover .driver-popover-arrow-side-bottom {
+  background: #18181b !important;
+}
+
+/* Driver.js stage styling - use light overlay in dark mode for contrast */
+html.dark .driver-overlay {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+html:not(.dark) .driver-overlay {
+  background: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Highlighted element stage border */
+#driver-highlighted-element-stage {
+  outline: 3px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  border-radius: 8px !important;
+}
+
+html.dark #driver-highlighted-element-stage {
+  outline-color: #60a5fa !important;
+  box-shadow: 0 0 0 6px rgba(96, 165, 250, 0.3),
+              0 0 30px rgba(96, 165, 250, 0.4) !important;
+}

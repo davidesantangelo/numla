@@ -95,6 +95,13 @@ export const ui = {
       cmdDollar: document.getElementById('cmd-dollar'),
       cmdEuro: document.getElementById('cmd-euro'),
       cmdPi: document.getElementById('cmd-pi'),
+      // Help Tour Buttons
+      helpTourBtn: document.getElementById('help-tour-btn'),
+      helpTourBtnMobile: document.getElementById('help-tour-btn-mobile'),
+      // More Menu Elements
+      moreMenuBtn: document.getElementById('more-menu-btn'),
+      moreMenuDropdown: document.getElementById('more-menu-dropdown'),
+      menuGuideBtn: document.getElementById('menu-guide-btn'),
       // Shortcuts Modal Elements (removed - no longer needed)
     };
 
@@ -181,11 +188,50 @@ export const ui = {
         this.elements.cancelCloseAllBtn.addEventListener('click', () => this.hideCloseAllModal());
     }
 
+    // Help Tour Button Events
+    if (this.elements.helpTourBtn) {
+        this.elements.helpTourBtn.addEventListener('click', () => {
+            if (this.onStartTour) this.onStartTour();
+        });
+    }
+    if (this.elements.helpTourBtnMobile) {
+        this.elements.helpTourBtnMobile.addEventListener('click', () => {
+            if (this.onStartTour) this.onStartTour();
+        });
+    }
+
+    // More Menu Events
+    if (this.elements.moreMenuBtn && this.elements.moreMenuDropdown) {
+        this.elements.moreMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.toggleMoreMenu();
+        });
+        
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!this.elements.moreMenuDropdown.contains(e.target) && 
+                !this.elements.moreMenuBtn.contains(e.target)) {
+                this.hideMoreMenu();
+            }
+        });
+        
+        // Guide button in menu
+        if (this.elements.menuGuideBtn) {
+            this.elements.menuGuideBtn.addEventListener('click', () => {
+                this.hideMoreMenu();
+                if (this.onStartTour) this.onStartTour();
+            });
+        }
+    }
+
     // Command Bar Events
     this.initCommandBar();
 
     console.log('UI Initialized');
   },
+
+  // Tour callback - will be set by app.js
+  onStartTour: null,
 
   initCommandBar() {
     // Percentage
@@ -951,5 +997,45 @@ price + tax`;
 
  exitFocusMode() {
     document.body.classList.remove('focus-mode');
+ },
+
+ toggleMoreMenu() {
+    const dropdown = this.elements.moreMenuDropdown;
+    if (!dropdown) return;
+    
+    const isVisible = !dropdown.classList.contains('invisible');
+    if (isVisible) {
+        this.hideMoreMenu();
+    } else {
+        this.showMoreMenu();
+    }
+ },
+
+ showMoreMenu() {
+    const dropdown = this.elements.moreMenuDropdown;
+    const btn = this.elements.moreMenuBtn;
+    if (!dropdown) return;
+    
+    dropdown.classList.remove('invisible', 'opacity-0', 'translate-y-1');
+    dropdown.classList.add('opacity-100', 'translate-y-0');
+    
+    // Change button style when menu is open
+    if (btn) {
+        btn.classList.add('bg-zinc-200', 'dark:bg-zinc-800', 'text-zinc-900', 'dark:text-zinc-100');
+    }
+ },
+
+ hideMoreMenu() {
+    const dropdown = this.elements.moreMenuDropdown;
+    const btn = this.elements.moreMenuBtn;
+    if (!dropdown) return;
+    
+    dropdown.classList.add('invisible', 'opacity-0', 'translate-y-1');
+    dropdown.classList.remove('opacity-100', 'translate-y-0');
+    
+    // Restore button style when menu is closed
+    if (btn) {
+        btn.classList.remove('bg-zinc-200', 'dark:bg-zinc-800', 'text-zinc-900', 'dark:text-zinc-100');
+    }
  }
 };

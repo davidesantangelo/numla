@@ -205,4 +205,47 @@ body {
 /* Copy success feedback */
 .command-btn.copied {
   color: #22c55e !important;
+}/* GitHub Glow Animation */
+.github-glow {
+  @apply relative overflow-hidden isolate;
+}
+
+.github-glow::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(from 0deg, transparent 0 340deg, #3b82f6 360deg);
+  animation: spin-glow 2s linear infinite;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: -2;
+}
+
+.github-glow:hover {
+  @apply border-transparent;
+}
+
+.github-glow:hover::before {
+  opacity: 1;
+}
+
+.github-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  z-index: -1;
+  @apply bg-zinc-50 dark:bg-black transition-colors duration-200;
+}
+
+.github-glow:hover::after {
+  @apply bg-zinc-100 dark:bg-zinc-900; /* Slightly darker on hover */
+}
+
+@keyframes spin-glow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }

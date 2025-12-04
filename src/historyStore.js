@@ -6,6 +6,8 @@
 const HISTORY_PREFIX = 'numla-history-';
 const MAX_SNAPSHOTS = 100;
 const MIN_CHANGE_THRESHOLD = 5; // Minimum character change to create snapshot
+const SNAPSHOT_MIN_INTERVAL = 2000; // Minimum time (ms) between snapshots per note
+const SIGNIFICANT_CHANGE_MULTIPLIER = 3; // Allow large edits to bypass interval throttling
 
 let historyCache = new Map();
 
@@ -105,18 +107,34 @@ export const historyStore = {
 
     const history = loadHistory(noteId);
     const lastSnapshot = history[history.length - 1];
+    const now = Date.now();
 
-    // Check if change is significant enough
+    // Skip if nothing meaningful changed
+    if (lastSnapshot && lastSnapshot.content === content) {
+      return false;
+    }
+
+    const changeMagnitude = lastSnapshot
+      ? getChangeMagnitude(lastSnapshot.content, content)
+      : (content ? content.length : 0);
+
+    // Guard against tiny edits
+    if (lastSnapshot && changeMagnitude < MIN_CHANGE_THRESHOLD) {
+      return false;
+    }
+
+    // Throttle rapid snapshots unless the change is significant
     if (lastSnapshot) {
-      const changeMagnitude = getChangeMagnitude(lastSnapshot.content, content);
-      if (changeMagnitude < MIN_CHANGE_THRESHOLD) {
-        return false; // Not enough change
+      const elapsed = now - lastSnapshot.timestamp;
+      const significantChangeThreshold = MIN_CHANGE_THRESHOLD * SIGNIFICANT_CHANGE_MULTIPLIER;
+      if (elapsed < SNAPSHOT_MIN_INTERVAL && changeMagnitude < significantChangeThreshold) {
+        return false;
       }
     }
 
     // Create new snapshot
     const snapshot = {
-      timestamp: Date.now(),
+      timestamp: now,
       content: content,
       wordCount: countWords(content)
     };

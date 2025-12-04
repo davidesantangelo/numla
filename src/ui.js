@@ -138,6 +138,9 @@ export const ui = {
     // Initialize currencies in background
     this.calculator.waitForReady().then(() => {
       console.log('Calculator ready with live currency rates');
+      // Force a recalculation so currency updates are reflected without requiring user input
+      const currentText = this.elements.editor?.value || '';
+      this.calculateAndRender(currentText, { force: true });
     }).catch(err => {
       console.warn('Calculator initialized with fallback rates:', err);
     });
@@ -819,10 +822,10 @@ price + tax`;
     }
   },
 
-  calculateAndRender(text) {
-      // Skip calculation if text hasn't changed
-      if (text === this.lastCalculatedText) {
-          return this.lastResults;
+    calculateAndRender(text, { force = false } = {}) {
+      // Skip calculation if text hasn't changed and not forced
+      if (!force && text === this.lastCalculatedText) {
+        return this.lastResults;
       }
       
       const results = this.calculator.evaluate(text);

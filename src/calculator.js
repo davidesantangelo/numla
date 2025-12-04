@@ -668,18 +668,83 @@ export class Calculator {
             if (regex.test(lowerText)) {
                 // Replace the keyword while preserving the rest of the expression
                 text = text.replace(regex, replacement);
-                break; // Only replace one keyword per call
+                // Don't break - replace all holidays in the expression
             }
         }
         
         return text;
     }
 
+    _getHolidayDate(keyword) {
+        const currentYear = new Date().getFullYear();
+        const lowerKeyword = keyword.toLowerCase().trim();
+        
+        const holidays = {
+            'christmas': new Date(currentYear, 11, 25),
+            'xmas': new Date(currentYear, 11, 25),
+            'new year': new Date(currentYear + 1, 0, 1),
+            'new years': new Date(currentYear + 1, 0, 1),
+            'newyear': new Date(currentYear + 1, 0, 1),
+            'newyears': new Date(currentYear + 1, 0, 1),
+            'halloween': new Date(currentYear, 9, 31),
+            'thanksgiving': new Date(currentYear, 10, 28),
+            'easter': new Date(currentYear, 3, 20),
+        };
+        
+        return holidays[lowerKeyword] || null;
+    }
+
     _evaluateDate(text) {
         // Check for date math: "Date + Duration" or "Date - Duration" or just "Date"
         // We use chrono to parse the date part.
         
-        // Preprocess holiday keywords first
+        // Handle "today" keyword explicitly
+        const lowerText = text.toLowerCase().trim();
+        
+        // Check for date difference patterns BEFORE preprocessing holidays
+        // This handles: "today + christmas", "christmas - today", etc.
+        const dateKeywords = 'today|now|tomorrow|yesterday|christmas|xmas|new\\s*years?|halloween|thanksgiving|easter';
+        
+        // Pattern for "today + christmas" style (days until holiday)
+        const todayPlusHolidayRegex = new RegExp(`^(today|now)\\s*\\+\\s*(christmas|xmas|new\\s*years?|halloween|thanksgiving|easter)$`, 'i');
+        const todayPlusHolidayMatch = lowerText.match(todayPlusHolidayRegex);
+        if (todayPlusHolidayMatch) {
+            const today = new Date();
+            const holidayDate = this._getHolidayDate(todayPlusHolidayMatch[2]);
+            if (holidayDate) {
+                const diffMs = holidayDate.getTime() - today.getTime();
+                const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                return diffDays; // Return days until the holiday
+            }
+        }
+        
+        // Pattern for "christmas + today" style (also days until holiday)
+        const holidayPlusTodayRegex = new RegExp(`^(christmas|xmas|new\\s*years?|halloween|thanksgiving|easter)\\s*\\+\\s*(today|now)$`, 'i');
+        const holidayPlusTodayMatch = lowerText.match(holidayPlusTodayRegex);
+        if (holidayPlusTodayMatch) {
+            const today = new Date();
+            const holidayDate = this._getHolidayDate(holidayPlusTodayMatch[1]);
+            if (holidayDate) {
+                const diffMs = holidayDate.getTime() - today.getTime();
+                const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+                return diffDays; // Return days until the holiday
+            }
+        }
+        
+        // Pattern for date differences: "christmas - today" or "today - christmas"
+        const dateDiffRegex = new RegExp(`^(${dateKeywords})\\s*[-–]\\s*(${dateKeywords})$`, 'i');
+        const dateDiffMatch = lowerText.match(dateDiffRegex);
+        if (dateDiffMatch) {
+            const date1 = this._parseDateKeyword(dateDiffMatch[1]);
+            const date2 = this._parseDateKeyword(dateDiffMatch[2]);
+            if (date1 && date2) {
+                const diffMs = date1.getTime() - date2.getTime();
+                const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+                return diffDays; // Return as number of days
+            }
+        }
+        
+        // Now preprocess holiday keywords for other patterns
         text = this._preprocessHolidayKeywords(text);
         
         // Check for "UNIT until DATE" pattern (e.g., "days until christmas", "weeks until new year")
@@ -774,6 +839,26 @@ export class Calculator {
         }
 
         return null;
+    }
+
+    _parseDateKeyword(keyword) {
+        const lowerKeyword = keyword.toLowerCase().trim().replace(/\s+/g, '');
+        
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        switch (lowerKeyword) {
+            case 'today':
+            case 'now':
+                return today;
+            case 'tomorrow':
+                return new Date(today.getTime() + 24 * 60 * 60 * 1000);
+            case 'yesterday':
+                return new Date(today.getTime() - 24 * 60 * 60 * 1000);
+            default:
+                // Try to get holiday date
+                return this._getHolidayDate(keyword);
+        }
     }
 
 

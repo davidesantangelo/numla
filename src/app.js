@@ -136,10 +136,11 @@ function renderTabs() {
   if (!ui.elements.tabBar) return;
   
   const notes = store.getNotes();
+  const noteMap = new Map(notes.map(note => [note.id, note]));
   
   // Clear previous content and event listeners by replacing innerHTML
   ui.elements.tabBar.innerHTML = openTabs.map(tabId => {
-    const note = notes.find(n => n.id === tabId);
+    const note = noteMap.get(tabId);
     if (!note) return '';
     
     const isActive = tabId === activeNoteId;

@@ -1,5 +1,8 @@
 import { Calculator } from './calculator.js';
 
+const HIGHLIGHT_CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'SEK', 'NZD', 'KRW', 'SGD', 'NOK', 'MXN', 'INR', 'RUB', 'ZAR', 'TRY', 'BRL', 'TWD', 'DKK', 'PLN', 'THB', 'IDR', 'HUF', 'CZK', 'ILS', 'CLP', 'PHP', 'AED', 'COP', 'SAR', 'MYR', 'RON'];
+const HIGHLIGHT_CURRENCY_REGEX = new RegExp(`\\b(${HIGHLIGHT_CURRENCIES.join('|')})\\b`, 'gi');
+
 // Debounce utility function
 export function debounce(func, wait) {
   let timeout;
@@ -96,6 +99,16 @@ export const ui = {
     };
 
     this.initTheme();
+
+    if (this.elements.resultsDisplay) {
+      this.elements.resultsDisplay.addEventListener('click', (event) => {
+        const target = event.target.closest('.result-item');
+        if (target && this.elements.resultsDisplay.contains(target)) {
+          event.preventDefault();
+          this._copyResult(target);
+        }
+      });
+    }
 
     // Initialize currencies in background
     this.calculator.waitForReady().then(() => {
@@ -305,9 +318,7 @@ export const ui = {
       // Currency Highlighting (Purple)
       // Highlight common currency codes (case insensitive)
       // Use purple-500 for light mode and purple-300 for dark - more visible
-      const currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'SEK', 'NZD', 'KRW', 'SGD', 'NOK', 'MXN', 'INR', 'RUB', 'ZAR', 'TRY', 'BRL', 'TWD', 'DKK', 'PLN', 'THB', 'IDR', 'HUF', 'CZK', 'ILS', 'CLP', 'PHP', 'AED', 'COP', 'SAR', 'MYR', 'RON'];
-      const currencyRegex = new RegExp(`\\b(${currencies.join('|')})\\b`, 'gi');
-      html = html.replace(currencyRegex, '<span class="text-purple-500 dark:text-purple-300 font-medium">$1</span>');
+      html = html.replace(HIGHLIGHT_CURRENCY_REGEX, '<span class="text-purple-500 dark:text-purple-300 font-medium">$1</span>');
       
       // Handle trailing newline
       if (text.endsWith('\n')) {
@@ -761,7 +772,7 @@ price + tax`;
   },
 
   renderResults(results) {
-      this.elements.resultsDisplay.innerHTML = results.map((r, index) => {
+        this.elements.resultsDisplay.innerHTML = results.map((r, index) => {
           if (!r || r.trim() === '' || r === '&nbsp;') {
               return '<div>&nbsp;</div>';
           }
@@ -774,11 +785,6 @@ price + tax`;
           );
           return `<div>${clickableResult}</div>`;
       }).join('');
-      
-      // Add click handlers for copying
-      this.elements.resultsDisplay.querySelectorAll('.result-item').forEach(item => {
-          item.addEventListener('click', (e) => this._copyResult(e.currentTarget));
-      });
   },
 
   async _copyResult(element) {

@@ -2,6 +2,9 @@ const STORAGE_KEY = 'numla-notes';
 const MAX_NOTES = 500; // Maximum number of notes to prevent memory issues
 const MAX_NOTE_SIZE = 500000; // 500KB max per note
 
+// Import historyStore for time machine feature
+import { historyStore } from './historyStore.js';
+
 let notesCache = null;
 let cacheVersion = null;
 
@@ -83,6 +86,12 @@ export const store = {
     }
     
     this._persist(notes);
+    
+    // Save snapshot for time machine (debounced internally by historyStore)
+    if (updatedNote.content !== undefined) {
+      historyStore.saveSnapshot(updatedNote.id, updatedNote.content);
+    }
+    
     const saved = notes.find(n => n.id === updatedNote.id);
     return saved ? { ...saved } : null;
   },
@@ -90,6 +99,8 @@ export const store = {
   deleteNote(id) {
     const notes = ensureCache().filter(n => n.id !== id);
     this._persist(notes);
+    // Clean up history for deleted note
+    historyStore.deleteHistory(id);
   },
 
   createNote() {

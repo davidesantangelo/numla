@@ -33,13 +33,31 @@ $RATE = 75
 
 ## Features
 
-| Feature        | How                                          |
-| -------------- | -------------------------------------------- |
-| **Tabs**       | Open multiple notes, click `+` to create new |
-| **Search**     | `⌘K` to find any note instantly              |
-| **Focus Mode** | Click expand icon, `Esc` to exit             |
-| **Theme**      | Each note remembers light/dark preference    |
-| **Export**     | Download notes as `.txt`                     |
+| Feature          | How                                            |
+| ---------------- | ---------------------------------------------- |
+| **Tabs**         | Open multiple notes, click `+` to create new   |
+| **Search**       | `⌘K` to find any note instantly                |
+| **Time Machine** | `⌘E` or click clock icon to browse history     |
+| **Focus Mode**   | Click expand icon, `Esc` to exit               |
+| **Theme**        | Each note remembers light/dark preference      |
+| **Export**       | Download notes as `.txt`                       |
+
+---
+
+## ⏰ Time Machine
+
+Never lose your work again! Time Machine automatically saves snapshots of your notes as you type.
+
+**How it works:**
+- 🕐 **Automatic snapshots** — Saves versions as you make changes
+- 📅 **Full timestamps** — See exactly when each version was created
+- 👀 **Preview before restore** — View the complete content before restoring
+- ⌨️ **Keyboard navigation** — Use `←` `→` arrows to browse versions
+- 🔄 **One-click restore** — Instantly restore any previous version
+
+**Open Time Machine:**
+- Press `⌘E` (Mac) / `Ctrl+E` (Windows)
+- Or click the clock icon in the toolbar
 
 ---
 
@@ -92,11 +110,13 @@ Powered by [math.js](https://mathjs.org):
 
 ## Shortcuts
 
-| Key   | Action             |
-| ----- | ------------------ |
-| `⌘J`  | New note           |
-| `⌘K`  | Search             |
-| `Esc` | Close / Exit focus |
+| Key   | Action                    |
+| ----- | ------------------------- |
+| `⌘J`  | New note                  |
+| `⌘K`  | Search                    |
+| `⌘E`  | Time Machine (history)    |
+| `←/→` | Navigate versions (in TM) |
+| `Esc` | Close / Exit focus        |
 
 ---
 

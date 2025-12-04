@@ -110,6 +110,15 @@ function getDesktopSteps() {
       }
     },
     {
+      element: '#time-machine-btn',
+      popover: {
+        title: 'Time Machine',
+        description: 'Travel back in time! Browse through your note\'s history and restore any previous version. Press ⌘E to open.',
+        side: 'bottom',
+        align: 'center'
+      }
+    },
+    {
       element: '#export-btn',
       popover: {
         title: 'Export',
@@ -125,6 +134,7 @@ function getDesktopSteps() {
           <div style="text-align: left; font-size: 13px; line-height: 1.6;">
             <p><kbd style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px;">⌘K</kbd> Search notes</p>
             <p><kbd style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px;">⌘J</kbd> New note</p>
+            <p><kbd style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px;">⌘E</kbd> Time Machine</p>
             <p><kbd style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px;">ESC</kbd> Exit focus mode</p>
           </div>
         `,
@@ -193,7 +203,16 @@ function getMobileSteps() {
       element: '#mobile-bottom-bar',
       popover: {
         title: 'Toolbar',
-        description: 'Export the note, delete it, change theme, or enable focus mode.',
+        description: 'Export, delete, change theme, focus mode, or open Time Machine to restore previous versions.',
+        side: 'top',
+        align: 'center'
+      }
+    },
+    {
+      element: '#time-machine-btn-mobile',
+      popover: {
+        title: 'Time Machine',
+        description: 'Tap to browse your note\'s history and restore any previous version.',
         side: 'top',
         align: 'center'
       }

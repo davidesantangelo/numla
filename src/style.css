@@ -423,3 +423,101 @@ html.dark #driver-highlighted-element-stage {
   box-shadow: 0 0 0 6px rgba(96, 165, 250, 0.3),
               0 0 30px rgba(96, 165, 250, 0.4) !important;
 }
+
+/* ====== Time Machine Styles ====== */
+
+/* Time Machine panel - full screen */
+#time-machine-panel {
+  transition: opacity 0.3s ease;
+}
+
+/* Time Machine active state - hide editor */
+.time-machine-active #note-editor,
+.time-machine-active #highlighter,
+.time-machine-active #results-display,
+.time-machine-active #command-bar,
+.time-machine-active .tab-bar {
+  display: none;
+}
+
+/* Custom slider styling */
+.time-machine-slider {
+  --progress: 100%;
+  background: linear-gradient(
+    to right,
+    #a855f7 0%,
+    #a855f7 var(--progress),
+    #3f3f46 var(--progress),
+    #3f3f46 100%
+  );
+}
+
+/* Slider thumb */
+.time-machine-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  cursor: pointer;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.4), 0 0 0 2px rgba(168, 85, 247, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.time-machine-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.5), 0 0 0 4px rgba(168, 85, 247, 0.15);
+}
+
+.time-machine-slider::-webkit-slider-thumb:active {
+  transform: scale(1.05);
+}
+
+.dark .time-machine-slider::-webkit-slider-thumb {
+  border-color: #18181b;
+}
+
+/* Firefox slider thumb */
+.time-machine-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  cursor: pointer;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.4);
+  transition: transform 0.15s ease;
+}
+
+.time-machine-slider::-moz-range-thumb:hover {
+  transform: scale(1.15);
+}
+
+.dark .time-machine-slider::-moz-range-thumb {
+  border-color: #18181b;
+}
+
+/* Firefox track */
+.time-machine-slider::-moz-range-track {
+  height: 12px;
+  border-radius: 9999px;
+}
+
+/* Restore button glow effect */
+.time-machine-restore-btn:not(:disabled):hover {
+  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(168, 85, 247, 0.15);
+  transform: translateY(-1px);
+}
+
+.time-machine-restore-btn:not(:disabled):active {
+  transform: translateY(0);
+}
+
+/* Hide time machine in focus mode */
+.focus-mode #time-machine-btn,
+.focus-mode #time-machine-btn-mobile {
+  display: none;
+}
+

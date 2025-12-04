@@ -1,6 +1,8 @@
 import { store } from './store.js';
 import { ui, debounce } from './ui.js';
 import { initTour, startTour, resetTour } from './tour.js';
+import { timeMachine } from './timeMachine.js';
+import { historyStore } from './historyStore.js';
 
 let activeNoteId = null;
 let spotlightIndex = 0;
@@ -29,6 +31,46 @@ export function initApp() {
     resetTour(); // Reset to allow re-running
     startTour();
   };
+  
+  // Initialize Time Machine
+  timeMachine.init();
+  timeMachine.setCallbacks(
+    // On restore callback
+    (noteId, content) => {
+      if (noteId === activeNoteId) {
+        ui.elements.editor.value = content;
+        ui.updateHighlighter(content);
+        ui.calculateAndRender(content);
+        persistNoteContent(noteId, content, Date.now());
+        const title = getTitleFromContent(content);
+        ui.updateNoteTitle(title);
+        ui.updateTabMetadata(noteId, title);
+      }
+    },
+    // On close callback
+    () => {
+      ui.elements.editor.focus();
+    }
+  );
+  
+  // Listen for Time Machine preview events
+  window.addEventListener('timemachine:preview', (e) => {
+    const { content, isLatest } = e.detail;
+    // Show preview content in editor (read-only feel)
+    ui.elements.editor.value = content;
+    ui.updateHighlighter(content);
+    ui.calculateAndRender(content);
+  });
+  
+  // Listen for Time Machine close events (restore original)
+  window.addEventListener('timemachine:close', (e) => {
+    const { content } = e.detail;
+    if (content !== undefined) {
+      ui.elements.editor.value = content;
+      ui.updateHighlighter(content);
+      ui.calculateAndRender(content);
+    }
+  });
   
   setupEventListeners();
   
@@ -380,6 +422,19 @@ function setupEventListeners() {
       return;
     }
 
+    // Cmd+E -> Toggle Time Machine
+    if (isCmdOrCtrl && e.code === 'KeyE') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!timeMachine.isOpen() && activeNoteId) {
+        const currentContent = ui.elements.editor.value;
+        timeMachine.open(activeNoteId, currentContent);
+      } else if (timeMachine.isOpen()) {
+        timeMachine.close();
+      }
+      return;
+    }
+
 
     // Spotlight Navigation
     if (isSpotlightOpen) {
@@ -590,6 +645,32 @@ function setupEventListeners() {
           deleteAllNotes();
           ui.hideCloseAllModal();
           ui.toggleTabManager(false);
+      });
+  }
+
+  // Time Machine Button (Desktop)
+  const timeMachineBtn = document.getElementById('time-machine-btn');
+  if (timeMachineBtn) {
+      timeMachineBtn.addEventListener('click', () => {
+          if (!timeMachine.isOpen() && activeNoteId) {
+              const currentContent = ui.elements.editor.value;
+              timeMachine.open(activeNoteId, currentContent);
+          } else if (timeMachine.isOpen()) {
+              timeMachine.close();
+          }
+      });
+  }
+
+  // Time Machine Button (Mobile)
+  const timeMachineBtnMobile = document.getElementById('time-machine-btn-mobile');
+  if (timeMachineBtnMobile) {
+      timeMachineBtnMobile.addEventListener('click', () => {
+          if (!timeMachine.isOpen() && activeNoteId) {
+              const currentContent = ui.elements.editor.value;
+              timeMachine.open(activeNoteId, currentContent);
+          } else if (timeMachine.isOpen()) {
+              timeMachine.close();
+          }
       });
   }
 }

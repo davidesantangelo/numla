@@ -836,9 +836,18 @@ price + tax`;
   },
 
   renderResults(results) {
+        const text = this.elements.editor?.value || '';
+        const lines = text.split('\n');
+        
+        // Measure each line's visual height using the highlighter's styling
+        const lineHeights = this._measureLineHeights(lines);
+        
         this.elements.resultsDisplay.innerHTML = results.map((r, index) => {
+          const height = lineHeights[index] || 'auto';
+          const heightStyle = height !== 'auto' ? `min-height: ${height}px;` : '';
+          
           if (!r || r.trim() === '' || r === '&nbsp;') {
-              return '<div>&nbsp;</div>';
+              return `<div style="${heightStyle}">&nbsp;</div>`;
           }
           // Extract plain text value from the HTML span
           const plainValue = r.replace(/<[^>]*>/g, '').trim();
@@ -847,8 +856,47 @@ price + tax`;
               /<span class="([^"]*)">/,
               `<span class="$1 result-item cursor-pointer rounded-md px-1.5 inline-block transition-all duration-200 ease-out hover:bg-zinc-200/60 dark:hover:bg-zinc-700/50 hover:shadow-sm active:scale-95" data-value="${this._escapeHtml(plainValue)}" title="Click to copy">`
           );
-          return `<div>${clickableResult}</div>`;
+          return `<div style="${heightStyle}">${clickableResult}</div>`;
       }).join('');
+  },
+
+  _measureLineHeights(lines) {
+      // Create or reuse a hidden measurement div that matches the editor's styling
+      let measureDiv = document.getElementById('line-height-measure');
+      if (!measureDiv) {
+          measureDiv = document.createElement('div');
+          measureDiv.id = 'line-height-measure';
+          measureDiv.style.cssText = `
+              position: absolute;
+              visibility: hidden;
+              white-space: pre-wrap;
+              word-wrap: break-word;
+              overflow-wrap: break-word;
+              pointer-events: none;
+          `;
+          document.body.appendChild(measureDiv);
+      }
+      
+      // Match the editor's computed styles
+      const editor = this.elements.editor;
+      if (!editor) return lines.map(() => 'auto');
+      
+      const editorStyles = window.getComputedStyle(editor);
+      measureDiv.style.fontFamily = editorStyles.fontFamily;
+      measureDiv.style.fontSize = editorStyles.fontSize;
+      measureDiv.style.lineHeight = editorStyles.lineHeight;
+      measureDiv.style.width = `${editor.clientWidth}px`;
+      measureDiv.style.paddingLeft = editorStyles.paddingLeft;
+      measureDiv.style.paddingRight = editorStyles.paddingRight;
+      
+      // Measure each line individually
+      const heights = lines.map(line => {
+          // Use a non-breaking space for empty lines to maintain height
+          measureDiv.textContent = line || '\u00A0';
+          return measureDiv.offsetHeight;
+      });
+      
+      return heights;
   },
 
   async _copyResult(element) {

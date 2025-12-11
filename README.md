@@ -61,6 +61,16 @@ Never lose your work again! Time Machine automatically saves snapshots of your n
 
 ---
 
+## 📱 PWA & Offline Support
+
+Numla is a Progressive Web App (PWA), meaning you can install it on your device and use it offline.
+
+- **Installable**: Look for the install icon in your browser's address bar (Chrome/Edge) or "Add to Home Screen" (Safari).
+- **Offline Ready**: Works 100% offline. Load it once, and it works everywhere, even without internet.
+- **Fast**: Caches essential files for instant loading times.
+
+---
+
 ## Syntax Reference
 
 ### Operators
